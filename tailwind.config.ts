@@ -83,9 +83,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["var(--font-sans)"],
-        serif: ["var(--font-serif)"],
-        mono: ["var(--font-mono)"],
+        sans: ["Open Sans", "Roboto", "var(--font-sans)", "sans-serif"],
+        serif: ["Georgia", "var(--font-serif)", "serif"],
+        mono: ["Roboto Mono", "var(--font-mono)", "monospace"],
       },
       keyframes: {
         "accordion-down": {
