@@ -1,0 +1,74 @@
+
+Você é um engenheiro de software sênior. Gere um sistema web completo de “Controle de Materiais” com base nos dados da planilha atual, seguindo estritamente as especificações abaixo.
+
+1) Objetivo
+Criar um aplicativo web de inventário para os setores: ELÉTRICA, MARCENARIA, HIDRÁULICA, REFRIGERAÇÃO, PEDREIROS, PINTORES. O sistema deve fornecer visualização, busca, filtros, CRUD de itens, registro de movimentos (entradas/saídas/retornos/patrimônio/ajustes), alertas de baixo estoque e auditoria.
+
+2) Modelo de dados (obrigatório)
+Entidades:
+- Item:
+  id (uuid), setor (string), codigo_gce (string), item_nome (string),
+  estoque_minimo (number), estoque_atual (number),
+  entrada_inicial (number), patrimonio_inicial (number),
+  patrimonio_atual (number), pedido_patrimonio (number),
+  status_estoque (string), valor_referencia (number|null),
+  ata (string|null), compra (string|number|null), numero_pedido (string|number|null),
+  datas: { data_geral, data_entrada_patrimonio, data_saida, data_retorno, data_atualizacao, data_compra } (todas date|null),
+  observacoes (string|null), ativo (boolean)
+- Movimento:
+  id (uuid), item_id (uuid), tipo (string: 'entrada'|'saida'|'retorno'|'ajuste'|'patrimonio'|'compra'),
+  quantidade (number), responsavel (string|null),
+  origem (string|null), destino (string|null),
+  documento: { ata: string|null, numero_pedido: string|null },
+  valor_unitario_ref (number|null), data_movimento (date), observacoes (string|null)
+
+Regras:
+- status_estoque = 'Baixo Estoque' se estoque_atual <= estoque_minimo; 'Desativado' se ativo=false; caso contrário 'Estoque OK'.
+- Impedir estoques negativos; qualquer movimento que gere saldo < 0 deve alertar e exigir confirmação.
+- codigo_gce é string e pode incluir pontos; garantir unicidade por (setor, codigo_gce).
+- Todas as operações CRUD devem gravar log de auditoria (quem, quando, antes/depois).
+
+3) Importação da planilha (ETL)
+- Carregar o arquivo XLSX e detectar a linha de cabeçalho correta por aba; em abas onde o cabeçalho está deslocado, procurar a linha com “CÓDIGO GCE / ITEM / Ent.Inicial ...” e promovê-la a header antes de parsear.
+- Mapear colunas conforme:
+  * CÓDIGO GCE → Item.codigo_gce
+  * ITEM → Item.item_nome
+  * Estoque Mínimo → Item.estoque_minimo
+  * Manut. → Item.estoque_atual
+  * Ent.Inicial → Item.entrada_inicial
+  * Patrim.inic. → Item.patrimonio_inicial
+  * Patrim.est. → Item.patrimonio_atual
+  * Pedido Patrim. → Item.pedido_patrimonio
+  * V.REF / V.Ref / Valor de Ref → Item.valor_referencia
+  * ATA → Item.ata
+  * COMPRA → Item.compra
+  * N.PEDIDO → Item.numero_pedido
+  * Datas: “Data”, “Entr Patrim.”, “Saída da semana”/“Saída Semanal”/“Saída de material”, “Retorno”, “Atualização”, “DATA” → Item.datas (atribuir nome semântico)
+- “Desativado/Descontinuado” → Item.ativo=false; status_estoque='Desativado'.
+- Registrar “Folha7” como movimentos: usar “Nome/Retirou/Entr Patrim/Data” para criar Movimento com responsavel e tipo apropriado.
+- Registrar “Planilha1” como doações: criar movimentos tipo 'ajuste' ou coleção 'Doacoes'.
+
+4) Interface (UX)
+- Dashboard com cards: Itens totais, Baixo Estoque, Negativos (anomalias), Desativados; gráfico por setor; lista de alertas.
+- Lista de Itens com filtros por setor e busca por código/nome. Colunas: Código, Item, Estoque Atual, Estoque Mínimo, Status, Setor. Ações: Adicionar/Editar/Excluir.
+- Detalhe do Item com dados completos e timeline de Movimentos (entrada, saída, retorno, patrimônio, ajuste). Anexar documentos (ATA, pedido).
+- Wizard de Importação com validações e relatório de sucesso/erros.
+- Perfis de acesso: Leitura, Operador, Administrador.
+
+5) API/Serviços (se aplicável)
+- GET/POST/PUT/DELETE /api/items
+- GET/POST /api/items/{id}/movements
+- GET /api/alerts (baixo estoque, negativos, desativados)
+- POST /api/import (XLSX)
+
+6) Critérios de aceite
+- Conseguir importar o XLSX e montar os itens com status corretamente.
+- CRUD completo funcional.
+- Registro de movimentos atualiza estoque_atual com consistência e auditoria.
+- Alertas de baixo estoque e negativos visíveis no dashboard.
+- Export CSV/PDF e filtros por setor operando.
+
+7) Entregáveis
+- Código-fonte do app web (front + back) + instruções de execução.
+- Script/utilitário de importação.
+- Testes básicos (ex.: criação de item, entrada, saída, alerta).
