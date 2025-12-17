@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import { pgTable, text, integer, doublePrecision, boolean, timestamp, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -34,7 +34,7 @@ export const TIPOS_MOVIMENTO = [
 
 export type TipoMovimento = typeof TIPOS_MOVIMENTO[number];
 
-export const items = sqliteTable("items", {
+export const items = pgTable("items", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   setor: text("setor").notNull(),
   codigoGce: text("codigo_gce").notNull(),
@@ -46,21 +46,21 @@ export const items = sqliteTable("items", {
   patrimonioAtual: integer("patrimonio_atual").notNull().default(0),
   pedidoPatrimonio: integer("pedido_patrimonio").notNull().default(0),
   statusEstoque: text("status_estoque").notNull().default("Estoque OK"),
-  valorReferencia: real("valor_referencia"),
+  valorReferencia: doublePrecision("valor_referencia"),
   ata: text("ata"),
   compra: text("compra"),
   numeroPedido: text("numero_pedido"),
-  dataGeral: integer("data_geral", { mode: "timestamp" }),
-  dataEntradaPatrimonio: integer("data_entrada_patrimonio", { mode: "timestamp" }),
-  dataSaida: integer("data_saida", { mode: "timestamp" }),
-  dataRetorno: integer("data_retorno", { mode: "timestamp" }),
-  dataAtualizacao: integer("data_atualizacao", { mode: "timestamp" }),
-  dataCompra: integer("data_compra", { mode: "timestamp" }),
+  dataGeral: timestamp("data_geral"),
+  dataEntradaPatrimonio: timestamp("data_entrada_patrimonio"),
+  dataSaida: timestamp("data_saida"),
+  dataRetorno: timestamp("data_retorno"),
+  dataAtualizacao: timestamp("data_atualizacao"),
+  dataCompra: timestamp("data_compra"),
   observacoes: text("observacoes"),
-  ativo: integer("ativo", { mode: "boolean" }).notNull().default(true),
+  ativo: boolean("ativo").notNull().default(true),
 });
 
-export const movimentos = sqliteTable("movimentos", {
+export const movimentos = pgTable("movimentos", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   itemId: text("item_id").notNull().references(() => items.id, { onDelete: "cascade" }),
   tipo: text("tipo").notNull(),
@@ -70,8 +70,8 @@ export const movimentos = sqliteTable("movimentos", {
   destino: text("destino"),
   ata: text("ata"),
   numeroPedido: text("numero_pedido"),
-  valorUnitarioRef: real("valor_unitario_ref"),
-  dataMovimento: integer("data_movimento", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  valorUnitarioRef: doublePrecision("valor_unitario_ref"),
+  dataMovimento: timestamp("data_movimento").notNull().defaultNow(),
   observacoes: text("observacoes"),
 });
 
@@ -100,7 +100,7 @@ export type Item = typeof items.$inferSelect;
 export type InsertMovimento = z.infer<typeof insertMovimentoSchema>;
 export type Movimento = typeof movimentos.$inferSelect;
 
-export const users = sqliteTable("users", {
+export const users = pgTable("users", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),

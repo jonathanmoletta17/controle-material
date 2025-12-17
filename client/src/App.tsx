@@ -1,19 +1,19 @@
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { Toaster } from "@/shared/components/ui/toaster";
+import { TooltipProvider } from "@/shared/components/ui/tooltip";
+import { SidebarProvider, SidebarTrigger } from "@/shared/components/ui/sidebar";
+import { AppSidebar } from "@/shared/components/app-sidebar";
 import { ThemeProvider } from "@/lib/theme-provider";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/shared/components/theme-toggle";
 
-import Dashboard from "@/pages/dashboard";
-import ItemsList from "@/pages/items-list";
-import ItemDetail from "@/pages/item-detail";
-import Import from "@/pages/import";
-import Reports from "@/pages/reports";
-import NotFound from "@/pages/not-found";
+import Dashboard from "@/features/dashboard/pages/DashboardPage";
+import ItemsList from "@/features/inventory/pages/ItemsListPage";
+import ItemDetail from "@/features/inventory/pages/ItemDetailPage";
+import Import from "@/features/inventory/pages/ImportPage";
+import Reports from "@/features/reports/pages/ReportsPage";
+import NotFound from "@/shared/pages/NotFoundPage";
 
 function Router() {
   return (
