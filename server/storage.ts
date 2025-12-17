@@ -21,6 +21,7 @@ export interface IStorage {
   getItem(id: string): Promise<Item | undefined>;
   createItem(item: InsertItem): Promise<Item>;
   updateItem(id: string, item: Partial<InsertItem>): Promise<Item | undefined>;
+  getItemByCodigo(codigo: string): Promise<Item | undefined>;
   deleteItem(id: string): Promise<boolean>;
 
   getMovimentos(itemId: string): Promise<Movimento[]>;
@@ -57,6 +58,11 @@ export class DatabaseStorage implements IStorage {
 
   async getItem(id: string): Promise<Item | undefined> {
     const [item] = await db.select().from(items).where(eq(items.id, id));
+    return item || undefined;
+  }
+
+  async getItemByCodigo(codigo: string): Promise<Item | undefined> {
+    const [item] = await db.select().from(items).where(eq(items.codigoGce, codigo));
     return item || undefined;
   }
 

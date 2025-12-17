@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MovementBadge } from "./movement-badge";
 import { History, ArrowUp, ArrowDown, RotateCcw, Settings2, Building, ShoppingCart } from "lucide-react";
-import type { Movimento } from "@shared/schema";
+import type { Movimento, TipoMovimento } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -100,8 +100,9 @@ export function MovementTimeline({ movimentos, isLoading }: MovementTimelineProp
           <div className="absolute left-4 top-2 bottom-2 w-0.5 bg-border" />
           <div className="space-y-4">
             {sortedMovimentos.map((movimento) => {
-              const Icon = tipoIcons[movimento.tipo];
-              const colorClass = tipoColors[movimento.tipo];
+              const tipo = movimento.tipo as TipoMovimento;
+              const Icon = tipoIcons[tipo];
+              const colorClass = tipoColors[tipo];
 
               return (
                 <div
@@ -115,7 +116,7 @@ export function MovementTimeline({ movimentos, isLoading }: MovementTimelineProp
                   <div className="flex-1 min-w-0 pb-4">
                     <div className="flex items-start justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-2">
-                        <MovementBadge tipo={movimento.tipo} size="sm" />
+                        <MovementBadge tipo={tipo} size="sm" />
                         <span className="font-semibold text-sm">
                           {movimento.quantidade > 0 ? "+" : ""}{movimento.quantidade} unidades
                         </span>

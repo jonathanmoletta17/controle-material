@@ -27,7 +27,7 @@ import { ItemForm } from "@/components/item-form";
 import { MovementForm } from "@/components/movement-form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Item, Movimento, InsertItem, InsertMovimento } from "@shared/schema";
+import type { Item, Movimento, InsertItem, InsertMovimento, Setor } from "@shared/schema";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -151,7 +151,7 @@ export default function ItemDetail() {
           <div>
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold tracking-tight">{item.itemNome}</h1>
-              <SetorBadge setor={item.setor} />
+              <SetorBadge setor={item.setor as Setor} />
               <StatusBadge status={getDisplayStatus(item)} />
             </div>
             <p className="text-muted-foreground font-mono mt-1">

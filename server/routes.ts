@@ -155,6 +155,8 @@ export async function registerRoutes(
         "REFRIGERACAO": "REFRIGERACAO",
         "PEDREIROS": "PEDREIROS",
         "PINTORES": "PINTORES",
+        "FOLHA7": "HIDRAULICA",
+        "Folha7": "HIDRAULICA",
       };
 
       const columnMapping: Record<string, string> = {
@@ -257,14 +259,31 @@ export async function registerRoutes(
               }
             }
 
-            await storage.createItem(itemData);
-            results.imported++;
-            results.details.push({
-              row: i + 1,
-              setor: mappedSetor,
-              codigo: itemData.codigoGce,
-              status: "success",
-            });
+            // Check if item already exists
+            const existingItem = await storage.getItemByCodigo(itemData.codigoGce);
+            
+            if (existingItem) {
+                // Update existing item
+                await storage.updateItem(existingItem.id, itemData);
+                results.imported++; // Count as imported/updated
+                results.details.push({
+                    row: i + 1,
+                    setor: mappedSetor,
+                    codigo: itemData.codigoGce,
+                    status: "success", // or "updated"
+                });
+            } else {
+                // Create new item
+                await storage.createItem(itemData);
+                results.imported++;
+                results.details.push({
+                    row: i + 1,
+                    setor: mappedSetor,
+                    codigo: itemData.codigoGce,
+                    status: "success",
+                });
+            }
+
           } catch (error: any) {
             results.errors++;
             results.details.push({

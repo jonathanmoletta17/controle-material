@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./status-badge";
 import { SetorBadge } from "./setor-badge";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import type { Item } from "@shared/schema";
+import type { Item, Setor } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ItemsTableProps {
@@ -106,7 +106,7 @@ export function ItemsTable({ items, isLoading, onEdit, onDelete }: ItemsTablePro
                 {item.itemNome}
               </TableCell>
               <TableCell>
-                <SetorBadge setor={item.setor} size="sm" showIcon={false} />
+                <SetorBadge setor={item.setor as Setor} size="sm" showIcon={false} />
               </TableCell>
               <TableCell className="text-right font-mono tabular-nums">
                 {item.estoqueAtual}

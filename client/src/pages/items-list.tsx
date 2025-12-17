@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSearch, Link } from "wouter";
 import { Plus, Search, Filter, X } from "lucide-react";
@@ -41,6 +41,12 @@ export default function ItemsList() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [setorFilter, setSetorFilter] = useState<Setor | "all">(setorParam || "all");
+
+  // Sync state with URL param
+  useEffect(() => {
+    setSetorFilter(setorParam || "all");
+  }, [setorParam]);
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [deletingItem, setDeletingItem] = useState<Item | null>(null);
