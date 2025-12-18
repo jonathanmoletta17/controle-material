@@ -34,3 +34,8 @@ attached_assets/*.tsv
 
 # Misc
 migrations/*.tmp
+
+# Testing
+playwright-report/
+test-results/
+ANALISE_DADOS_DETALHADA.md

@@ -1,0 +1,37 @@
+services:
+  app:
+    build: .
+    container_name: controle-material-app
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/controle_material
+      - SESSION_SECRET=super_secret_session_key_change_me_in_production
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: controle-material-db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=controle_material
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    ports:
+      - "5434:5432" # Mapeado para 5434 para evitar conflito com local 5432/5433
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
