@@ -12,21 +12,19 @@ interface MovementTimelineProps {
 }
 
 const tipoIcons = {
-  entrada: ArrowUp,
-  saida: ArrowDown,
-  retorno: RotateCcw,
-  ajuste: Settings2,
-  patrimonio: Building,
-  compra: ShoppingCart,
+  RETIRADA_MANUTENCAO: ArrowDown,
+  RETORNO_MANUTENCAO: RotateCcw,
+  ENTRADA_PATRIMONIO: Building,
+  PEDIDO_PATRIMONIO: ShoppingCart,
+  ADIANTAMENTO_MANUTENCAO: ArrowUp,
 };
 
 const tipoColors = {
-  entrada: "bg-chart-2 text-white",
-  saida: "bg-destructive text-white",
-  retorno: "bg-chart-1 text-white",
-  ajuste: "bg-chart-4 text-white",
-  patrimonio: "bg-muted-foreground text-white",
-  compra: "bg-chart-5 text-white",
+  RETIRADA_MANUTENCAO: "bg-destructive text-white", // Saída
+  RETORNO_MANUTENCAO: "bg-chart-1 text-white",     // Retorno
+  ENTRADA_PATRIMONIO: "bg-muted-foreground text-white", // Patrimônio
+  PEDIDO_PATRIMONIO: "bg-chart-5 text-white",      // Pedido
+  ADIANTAMENTO_MANUTENCAO: "bg-chart-2 text-white", // Adiantamento
 };
 
 export function MovementTimeline({ movimentos, isLoading }: MovementTimelineProps) {
@@ -101,8 +99,9 @@ export function MovementTimeline({ movimentos, isLoading }: MovementTimelineProp
           <div className="space-y-4">
             {sortedMovimentos.map((movimento) => {
               const tipo = movimento.tipo as TipoMovimento;
-              const Icon = tipoIcons[tipo];
-              const colorClass = tipoColors[tipo];
+              // Fallback for icons/colors in case of legacy data or type mismatch
+              const Icon = tipoIcons[tipo] || Settings2;
+              const colorClass = tipoColors[tipo] || "bg-gray-500 text-white";
 
               return (
                 <div
@@ -118,7 +117,8 @@ export function MovementTimeline({ movimentos, isLoading }: MovementTimelineProp
                       <div className="flex items-center gap-2">
                         <MovementBadge tipo={tipo} size="sm" />
                         <span className="font-semibold text-sm">
-                          {movimento.quantidade > 0 ? "+" : ""}{movimento.quantidade} unidades
+                          {tipo === "RETIRADA_MANUTENCAO" || tipo === "PEDIDO_PATRIMONIO" ? "-" : "+"}
+                          {movimento.quantidade} unidades
                         </span>
                       </div>
                       <span className="text-xs text-muted-foreground">
@@ -129,11 +129,8 @@ export function MovementTimeline({ movimentos, isLoading }: MovementTimelineProp
                       {movimento.responsavel && (
                         <p>Responsavel: {movimento.responsavel}</p>
                       )}
-                      {movimento.origem && (
-                        <p>Origem: {movimento.origem}</p>
-                      )}
-                      {movimento.destino && (
-                        <p>Destino: {movimento.destino}</p>
+                      {movimento.numeroChamado && (
+                        <p>Chamado: {movimento.numeroChamado}</p>
                       )}
                       {movimento.observacoes && (
                         <p className="italic">{movimento.observacoes}</p>

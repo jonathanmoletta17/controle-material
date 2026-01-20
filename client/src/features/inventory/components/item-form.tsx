@@ -27,11 +27,9 @@ import { Loader2 } from "lucide-react";
 const formSchema = insertItemSchema.extend({
   estoqueMinimo: z.coerce.number().min(0, "Deve ser maior ou igual a 0"),
   estoqueAtual: z.coerce.number(),
-  entradaInicial: z.coerce.number().min(0),
-  patrimonioInicial: z.coerce.number().min(0),
   patrimonioAtual: z.coerce.number().min(0),
-  pedidoPatrimonio: z.coerce.number().min(0),
-  valorReferencia: z.coerce.number().min(0).nullable(),
+  validadeValorReferencia: z.coerce.date().nullable().optional(),
+  validadeAta: z.coerce.date().nullable().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -47,19 +45,15 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      setor: item?.setor || "ELETRICA",
+      setor: "UNIFICADO",
       codigoGce: item?.codigoGce || "",
       itemNome: item?.itemNome || "",
       estoqueMinimo: item?.estoqueMinimo || 0,
       estoqueAtual: item?.estoqueAtual || 0,
-      entradaInicial: item?.entradaInicial || 0,
-      patrimonioInicial: item?.patrimonioInicial || 0,
       patrimonioAtual: item?.patrimonioAtual || 0,
-      pedidoPatrimonio: item?.pedidoPatrimonio || 0,
-      valorReferencia: item?.valorReferencia || null,
+      validadeValorReferencia: item?.validadeValorReferencia ? new Date(item.validadeValorReferencia) : null,
       ata: item?.ata || "",
-      compra: item?.compra || "",
-      numeroPedido: item?.numeroPedido || "",
+      validadeAta: item?.validadeAta ? new Date(item.validadeAta) : null,
       observacoes: item?.observacoes || "",
       ativo: item?.ativo ?? true,
     },
@@ -77,41 +71,33 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
             control={form.control}
             name="codigoGce"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="md:col-span-2">
                 <FormLabel>Codigo GCE *</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="Ex: 1.2.3.4" 
-                    {...field} 
+                  <Input
+                    placeholder="Ex: 1234.5678.123456"
+                    {...field}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Se conter letras, retorna o valor original (permite ADIANTAMENTO)
+                      if (/[a-zA-Z]/.test(value)) {
+                        field.onChange(value);
+                        return;
+                      }
+
+                      // Remove tudo que não é dígito e aplica a máscara
+                      const formatted = value
+                        .replace(/\D/g, "")
+                        .replace(/^(\d{4})(\d)/, "$1.$2")
+                        .replace(/^(\d{4})\.(\d{4})(\d)/, "$1.$2.$3")
+                        .slice(0, 16); // 14 dígitos + 2 pontos
+
+                      field.onChange(formatted);
+                    }}
                     data-testid="input-codigo-gce"
                   />
                 </FormControl>
                 <FormDescription>Codigo unico do item no GCE</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="setor"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Setor *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger data-testid="select-setor">
-                      <SelectValue placeholder="Selecione o setor" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {SETORES.map((setor) => (
-                      <SelectItem key={setor} value={setor}>
-                        {setor.charAt(0) + setor.slice(1).toLowerCase()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -125,9 +111,9 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
             <FormItem>
               <FormLabel>Nome do Item *</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Nome completo do item" 
-                  {...field} 
+                <Input
+                  placeholder="Nome completo do item"
+                  {...field}
                   data-testid="input-item-nome"
                 />
               </FormControl>
@@ -144,9 +130,10 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
               <FormItem>
                 <FormLabel>Estoque Atual</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field} 
+                  <Input
+                    type="number"
+                    min="0"
+                    {...field}
                     data-testid="input-estoque-atual"
                   />
                 </FormControl>
@@ -162,31 +149,14 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
               <FormItem>
                 <FormLabel>Estoque Minimo</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field} 
+                  <Input
+                    type="number"
+                    min="0"
+                    {...field}
                     data-testid="input-estoque-minimo"
                   />
                 </FormControl>
                 <FormDescription>Alerta quando atingir</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="entradaInicial"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Entrada Inicial</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field} 
-                    data-testid="input-entrada-inicial"
-                  />
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -196,32 +166,15 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <FormField
             control={form.control}
-            name="patrimonioInicial"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Patrimonio Inicial</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field} 
-                    data-testid="input-patrimonio-inicial"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
             name="patrimonioAtual"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Patrimonio Atual</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field} 
+                  <Input
+                    type="number"
+                    min="0"
+                    {...field}
                     data-testid="input-patrimonio-atual"
                   />
                 </FormControl>
@@ -232,39 +185,37 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
 
           <FormField
             control={form.control}
-            name="pedidoPatrimonio"
+            name="validadeValorReferencia"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Pedido Patrimonio</FormLabel>
+                <FormLabel>Validade Valor Referência</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field} 
-                    data-testid="input-pedido-patrimonio"
+                  <Input
+                    type="date"
+                    {...field}
+                    value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""}
+                    onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                    data-testid="input-validade-valor-referencia"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <FormField
             control={form.control}
-            name="valorReferencia"
+            name="validadeAta"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Valor de Referencia (R$)</FormLabel>
+                <FormLabel>Validade da ATA</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    step="0.01"
-                    placeholder="0.00"
+                  <Input
+                    type="date"
                     {...field}
-                    value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
-                    data-testid="input-valor-referencia"
+                    value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""}
+                    onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                    data-testid="input-validade-ata"
                   />
                 </FormControl>
                 <FormMessage />
@@ -279,30 +230,11 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
               <FormItem>
                 <FormLabel>ATA</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="Numero da ATA" 
-                    {...field} 
+                  <Input
+                    placeholder="Numero da ATA"
+                    {...field}
                     value={field.value ?? ""}
                     data-testid="input-ata"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="numeroPedido"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Numero do Pedido</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Numero do pedido" 
-                    {...field} 
-                    value={field.value ?? ""}
-                    data-testid="input-numero-pedido"
                   />
                 </FormControl>
                 <FormMessage />
@@ -318,11 +250,11 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
             <FormItem>
               <FormLabel>Observacoes</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Notas adicionais sobre o item" 
+                <Textarea
+                  placeholder="Notas adicionais sobre o item"
                   className="resize-none"
                   rows={3}
-                  {...field} 
+                  {...field}
                   value={field.value ?? ""}
                   data-testid="textarea-observacoes"
                 />
@@ -356,17 +288,17 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
 
         <div className="flex items-center justify-end gap-3 pt-4">
           {onCancel && (
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={onCancel}
               data-testid="button-cancel"
             >
               Cancelar
             </Button>
           )}
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={isPending}
             data-testid="button-submit"
           >

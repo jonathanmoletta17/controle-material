@@ -8,41 +8,36 @@ interface MovementBadgeProps {
   size?: "sm" | "md";
 }
 
-const tipoConfig = {
-  entrada: {
-    className: "bg-chart-2/10 text-chart-2 border-chart-2/30",
-    icon: ArrowUp,
-    label: "Entrada",
-  },
-  saida: {
+const tipoConfig: Record<TipoMovimento, { className: string; icon: any; label: string }> = {
+  RETIRADA_MANUTENCAO: {
     className: "bg-destructive/10 text-destructive border-destructive/30",
     icon: ArrowDown,
     label: "Saida",
   },
-  retorno: {
+  RETORNO_MANUTENCAO: {
     className: "bg-chart-1/10 text-chart-1 border-chart-1/30",
     icon: RotateCcw,
     label: "Retorno",
   },
-  ajuste: {
-    className: "bg-chart-4/10 text-chart-4 border-chart-4/30",
-    icon: Settings2,
-    label: "Ajuste",
-  },
-  patrimonio: {
+  ENTRADA_PATRIMONIO: {
     className: "bg-muted text-muted-foreground border-muted-foreground/30",
     icon: Building,
     label: "Patrimonio",
   },
-  compra: {
+  PEDIDO_PATRIMONIO: {
     className: "bg-chart-5/10 text-chart-5 border-chart-5/30",
     icon: ShoppingCart,
-    label: "Compra",
+    label: "Pedido",
+  },
+  ADIANTAMENTO_MANUTENCAO: {
+    className: "bg-chart-2/10 text-chart-2 border-chart-2/30",
+    icon: ArrowUp,
+    label: "Adiantamento",
   },
 };
 
 export function MovementBadge({ tipo, size = "md" }: MovementBadgeProps) {
-  const config = tipoConfig[tipo];
+  const config = tipoConfig[tipo] || tipoConfig.ADIANTAMENTO_MANUTENCAO; // Fallback safe
   const Icon = config.icon;
 
   return (

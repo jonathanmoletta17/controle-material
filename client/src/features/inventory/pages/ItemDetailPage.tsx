@@ -26,6 +26,7 @@ import { MovementTimeline } from "@/features/inventory/components/movement-timel
 import { ItemForm } from "@/features/inventory/components/item-form";
 import { MovementForm } from "@/features/inventory/components/movement-form";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/features/auth/auth-context";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Item, Movimento, InsertItem, InsertMovimento, Setor } from "@shared/schema";
 import { format } from "date-fns";
@@ -42,6 +43,7 @@ export default function ItemDetail() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isMovementDialogOpen, setIsMovementDialogOpen] = useState(false);
@@ -151,7 +153,6 @@ export default function ItemDetail() {
           <div>
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold tracking-tight">{item.itemNome}</h1>
-              <SetorBadge setor={item.setor as Setor} />
               <StatusBadge status={getDisplayStatus(item)} />
             </div>
             <p className="text-muted-foreground font-mono mt-1">
@@ -160,14 +161,16 @@ export default function ItemDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setIsEditDialogOpen(true)}
-            data-testid="button-edit-item"
-          >
-            <Pencil className="h-4 w-4 mr-2" />
-            Editar
-          </Button>
+          {user?.role === "admin" && (
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(true)}
+              data-testid="button-edit-item"
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
+          )}
           <Button
             onClick={() => setIsMovementDialogOpen(true)}
             data-testid="button-add-movement"
@@ -198,10 +201,6 @@ export default function ItemDetail() {
                   <p className="text-2xl font-bold tabular-nums text-muted-foreground">{item.estoqueMinimo}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-muted-foreground">Entrada Inicial</span>
-                  <p className="text-2xl font-bold tabular-nums">{item.entradaInicial}</p>
-                </div>
-                <div>
                   <span className="text-sm text-muted-foreground">Patrimonio Atual</span>
                   <p className="text-2xl font-bold tabular-nums">{item.patrimonioAtual}</p>
                 </div>
@@ -221,22 +220,18 @@ export default function ItemDetail() {
                 <div className="space-y-4">
                   <div>
                     <span className="text-sm text-muted-foreground flex items-center gap-2">
-                      <DollarSign className="h-4 w-4" />
-                      Valor de Referencia
+                      <Calendar className="h-4 w-4" />
+                      Validade Valor Referência
                     </span>
                     <p className="font-medium mt-1">
-                      {item.valorReferencia
-                        ? `R$ ${item.valorReferencia.toFixed(2)}`
-                        : "Nao definido"}
+                      {item.validadeValorReferencia
+                        ? format(new Date(item.validadeValorReferencia), "dd/MM/yyyy", { locale: ptBR })
+                        : "Nao definida"}
                     </p>
                   </div>
                   <div>
                     <span className="text-sm text-muted-foreground">ATA</span>
                     <p className="font-medium mt-1">{item.ata || "Nao definido"}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-muted-foreground">Numero do Pedido</span>
-                    <p className="font-medium mt-1">{item.numeroPedido || "Nao definido"}</p>
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -246,9 +241,7 @@ export default function ItemDetail() {
                       Patrimonio
                     </span>
                     <div className="mt-1 space-y-1">
-                      <p className="text-sm">Inicial: <span className="font-medium">{item.patrimonioInicial}</span></p>
                       <p className="text-sm">Atual: <span className="font-medium">{item.patrimonioAtual}</span></p>
-                      <p className="text-sm">Pedido: <span className="font-medium">{item.pedidoPatrimonio}</span></p>
                     </div>
                   </div>
                   <div>

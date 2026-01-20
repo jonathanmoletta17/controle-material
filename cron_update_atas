@@ -1,0 +1,2 @@
+# Executa o script de atualização de atas todo domingo à meia-noite
+0 0 * * 0 /opt/venv/bin/python3 /app/update_atas.py >> /var/log/cron_update_atas.log 2>&1

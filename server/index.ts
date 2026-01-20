@@ -53,12 +53,38 @@ app.use((req, res, next) => {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 
+      // Add session debug info
+      const user = req.user as any;
+      if (req.user || req.sessionID) {
+        logLine += ` [Session: ${req.sessionID?.substring(0, 6)}... User: ${user?.username || 'none'}]`;
+      }
+
       log(logLine);
     }
   });
 
   next();
 });
+
+import session from "express-session";
+import { setupPassport } from "./modules/auth/passport.config";
+import MemoryStore from "memorystore";
+
+const SessionStore = MemoryStore(session);
+
+app.use(
+  session({
+    store: new SessionStore({
+      checkPeriod: 86400000,
+    }),
+    secret: process.env.SESSION_SECRET || "material_control_secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 },
+  })
+);
+
+setupPassport(app);
 
 (async () => {
   await registerRoutes(httpServer, app);

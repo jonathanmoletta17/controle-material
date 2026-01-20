@@ -1,16 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSearch, Link } from "wouter";
-import { Plus, Search, Filter, X } from "lucide-react";
+import { Plus, Search, Filter, X, AlertOctagon, CalendarClock } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -31,21 +24,14 @@ import { ItemsTable } from "@/features/inventory/components/items-table";
 import { ItemForm } from "@/features/inventory/components/item-form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Item, InsertItem, Setor } from "@shared/schema";
-import { SETORES } from "@shared/schema";
+import type { Item, InsertItem } from "@shared/schema";
+import { addMonths, isBefore } from "date-fns";
+
+import { useAuth } from "@/features/auth/auth-context";
 
 export default function ItemsList() {
-  const search = useSearch();
-  const params = new URLSearchParams(search);
-  const setorParam = params.get("setor") as Setor | null;
-
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [setorFilter, setSetorFilter] = useState<Setor | "all">(setorParam || "all");
-
-  // Sync state with URL param
-  useEffect(() => {
-    setSetorFilter(setorParam || "all");
-  }, [setorParam]);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
@@ -120,37 +106,121 @@ export default function ItemsList() {
     },
   });
 
+  const [showLowStockOnly, setShowLowStockOnly] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<'expired' | 'expiring' | null>(null);
+
+  const { expiredCount, expiringCount } = useMemo(() => {
+    const now = new Date();
+    const threeMonthsFromNow = addMonths(now, 3);
+
+    let expired = 0;
+    let expiring = 0;
+
+    items.forEach(item => {
+      const isRefExpired = item.validadeValorReferencia && isBefore(new Date(item.validadeValorReferencia), now);
+      const isAtaExpired = item.validadeAta && isBefore(new Date(item.validadeAta), now);
+
+      if (isRefExpired || isAtaExpired) {
+        expired++;
+        return;
+      }
+
+      const isRefExpiring = item.validadeValorReferencia && isBefore(new Date(item.validadeValorReferencia), threeMonthsFromNow);
+      const isAtaExpiring = item.validadeAta && isBefore(new Date(item.validadeAta), threeMonthsFromNow);
+
+      if (isRefExpiring || isAtaExpiring) {
+        expiring++;
+      }
+    });
+
+    return { expiredCount: expired, expiringCount: expiring };
+  }, [items]);
+
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
-      const matchesSetor = setorFilter === "all" || item.setor === setorFilter;
       const matchesSearch =
         searchQuery === "" ||
         item.itemNome.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.codigoGce.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesSetor && matchesSearch;
-    });
-  }, [items, setorFilter, searchQuery]);
 
-  const pageTitle = setorFilter !== "all" 
-    ? `Itens - ${setorFilter.charAt(0) + setorFilter.slice(1).toLowerCase()}` 
-    : "Todos os Itens";
+      const matchesLowStock = showLowStockOnly
+        ? item.estoqueAtual <= item.estoqueMinimo && item.ativo
+        : true;
+
+      if (activeFilter === 'expired') {
+        const now = new Date();
+        const isRefExpired = item.validadeValorReferencia && isBefore(new Date(item.validadeValorReferencia), now);
+        const isAtaExpired = item.validadeAta && isBefore(new Date(item.validadeAta), now);
+        return matchesSearch && matchesLowStock && (isRefExpired || isAtaExpired);
+      }
+
+      if (activeFilter === 'expiring') {
+        const now = new Date();
+        const threeMonthsFromNow = addMonths(now, 3);
+        const isRefExpiring = item.validadeValorReferencia &&
+          isBefore(new Date(item.validadeValorReferencia), threeMonthsFromNow) &&
+          !isBefore(new Date(item.validadeValorReferencia), now);
+
+        const isAtaExpiring = item.validadeAta &&
+          isBefore(new Date(item.validadeAta), threeMonthsFromNow) &&
+          !isBefore(new Date(item.validadeAta), now);
+
+        return matchesSearch && matchesLowStock && (isRefExpiring || isAtaExpiring);
+      }
+
+      return matchesSearch && matchesLowStock;
+    });
+  }, [items, searchQuery, showLowStockOnly, activeFilter]);
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Itens de Estoque</h1>
           <p className="text-muted-foreground mt-1">
             {filteredItems.length} item{filteredItems.length !== 1 ? "s" : ""} encontrado{filteredItems.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <Button 
-          onClick={() => setIsCreateDialogOpen(true)}
-          data-testid="button-add-item"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Item
-        </Button>
+        <div className="flex gap-2">
+          {expiredCount > 0 && (
+            <Button
+              variant={activeFilter === 'expired' ? "destructive" : "outline"}
+              onClick={() => setActiveFilter(activeFilter === 'expired' ? null : 'expired')}
+              className={`gap-2 ${activeFilter === 'expired' ? '' : 'text-destructive border-destructive hover:bg-destructive/10'}`}
+            >
+              <AlertOctagon className="h-4 w-4" />
+              {expiredCount} {expiredCount === 1 ? 'Item Vencido' : 'Itens Vencidos'}
+            </Button>
+          )}
+
+          {expiringCount > 0 && (
+            <Button
+              variant={activeFilter === 'expiring' ? "secondary" : "outline"}
+              onClick={() => setActiveFilter(activeFilter === 'expiring' ? null : 'expiring')}
+              className={`gap-2 ${activeFilter === 'expiring' ? 'bg-yellow-100 text-yellow-900 hover:bg-yellow-200' : 'text-yellow-600 border-yellow-600 hover:bg-yellow-50'}`}
+            >
+              <CalendarClock className="h-4 w-4" />
+              {expiringCount} {expiringCount === 1 ? 'A Vencer' : 'A Vencer'}
+            </Button>
+          )}
+          <Button
+            variant={showLowStockOnly ? "destructive" : "outline"}
+            onClick={() => setShowLowStockOnly(!showLowStockOnly)}
+            className="gap-2"
+          >
+            <Filter className="h-4 w-4" />
+            {showLowStockOnly ? "Exibindo Baixo Estoque" : "Filtrar Baixo Estoque"}
+          </Button>
+          {user?.role === "admin" && (
+            <Button
+              onClick={() => setIsCreateDialogOpen(true)}
+              data-testid="button-add-item"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Item
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
@@ -174,33 +244,13 @@ export default function ItemsList() {
             </Button>
           )}
         </div>
-
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select
-            value={setorFilter}
-            onValueChange={(value) => setSetorFilter(value as Setor | "all")}
-          >
-            <SelectTrigger className="w-[180px]" data-testid="select-filter-setor">
-              <SelectValue placeholder="Filtrar por setor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os setores</SelectItem>
-              {SETORES.map((setor) => (
-                <SelectItem key={setor} value={setor}>
-                  {setor.charAt(0) + setor.slice(1).toLowerCase()}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <ItemsTable
         items={filteredItems}
         isLoading={isLoading}
-        onEdit={setEditingItem}
-        onDelete={setDeletingItem}
+        onEdit={user?.role === "admin" ? setEditingItem : undefined}
+        onDelete={user?.role === "admin" ? setDeletingItem : undefined}
       />
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>

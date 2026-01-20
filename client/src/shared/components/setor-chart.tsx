@@ -1,11 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { PieChart } from "lucide-react";
-import type { Item } from "@shared/schema";
+import type { Movimento } from "@shared/schema";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 
-interface SetorChartProps {
-  items: Item[];
+interface ConsumptionChartProps {
+  movements: (Movimento & { setor?: string | null })[];
   isLoading?: boolean;
 }
 
@@ -18,7 +18,7 @@ const setorColors = {
   PINTORES: "hsl(var(--chart-3))",
 };
 
-const setorLabels = {
+const setorLabels: Record<string, string> = {
   ELETRICA: "Eletrica",
   MARCENARIA: "Marcenaria",
   HIDRAULICA: "Hidraulica",
@@ -27,12 +27,27 @@ const setorLabels = {
   PINTORES: "Pintores",
 };
 
-export function SetorChart({ items, isLoading }: SetorChartProps) {
-  const data = Object.entries(setorLabels).map(([key, label]) => ({
-    setor: label,
-    key,
-    count: items.filter(item => item.setor === key).length,
-  }));
+export function ConsumptionChart({ movements, isLoading }: ConsumptionChartProps) {
+  // Aggregate withdrawals by sector
+  const data = Object.keys(setorLabels).map((key) => {
+    // Filter movements: Needs to be "RETIRADA_MANUTENCAO" and match sector
+    const count = movements.filter(
+      (m) =>
+        m.tipo === "RETIRADA_MANUTENCAO" &&
+        m.setor === key
+    ).length;
+
+    return {
+      setor: setorLabels[key],
+      key,
+      count, // Number of withdrawal operations (or quantity? Let's use count for "Activity" or sum quantity for "Volume")
+      // User asked "setor consumindo mais", usually quantity is better but count is also good for activity.
+      // Let's sum Quantity for volume.
+      volume: movements
+        .filter((m) => m.tipo === "RETIRADA_MANUTENCAO" && m.setor === key)
+        .reduce((sum, m) => sum + m.quantidade, 0)
+    };
+  });
 
   if (isLoading) {
     return (
@@ -40,7 +55,7 @@ export function SetorChart({ items, isLoading }: SetorChartProps) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <PieChart className="h-5 w-5 text-primary" />
-            Distribuicao por Setor
+            Consumo por Setor
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -55,7 +70,7 @@ export function SetorChart({ items, isLoading }: SetorChartProps) {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <PieChart className="h-5 w-5 text-primary" />
-          Distribuicao por Setor
+          Consumo por Setor (Volume)
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -67,9 +82,9 @@ export function SetorChart({ items, isLoading }: SetorChartProps) {
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
               <XAxis type="number" allowDecimals={false} />
-              <YAxis 
-                type="category" 
-                dataKey="setor" 
+              <YAxis
+                type="category"
+                dataKey="setor"
                 width={100}
                 tick={{ fontSize: 12 }}
               />
@@ -80,13 +95,13 @@ export function SetorChart({ items, isLoading }: SetorChartProps) {
                   borderRadius: "var(--radius)",
                   color: "hsl(var(--popover-foreground))",
                 }}
-                formatter={(value) => [`${value} itens`, "Quantidade"]}
+                formatter={(value) => [`${value} unidades`, "Volume Retirado"]}
               />
-              <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+              <Bar dataKey="volume" radius={[0, 4, 4, 0]}>
                 {data.map((entry) => (
-                  <Cell 
-                    key={entry.key} 
-                    fill={setorColors[entry.key as keyof typeof setorColors]} 
+                  <Cell
+                    key={entry.key}
+                    fill={setorColors[entry.key as keyof typeof setorColors] || "hsl(var(--primary))"}
                   />
                 ))}
               </Bar>

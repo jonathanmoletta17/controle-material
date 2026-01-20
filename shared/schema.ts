@@ -3,6 +3,7 @@ import { pgTable, text, integer, doublePrecision, boolean, timestamp, uuid } fro
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
+import { v4 as uuidv4 } from "uuid";
 
 export const SETORES = [
   "ELETRICA",
@@ -24,55 +25,48 @@ export const STATUS_ESTOQUE = [
 export type StatusEstoque = typeof STATUS_ESTOQUE[number];
 
 export const TIPOS_MOVIMENTO = [
-  "entrada",
-  "saida",
-  "retorno",
-  "ajuste",
-  "patrimonio",
-  "compra"
+  "RETIRADA_MANUTENCAO", // Saída do estoque para uso (requer chamado)
+  "RETORNO_MANUTENCAO", // Devolução ao estoque (requer chamado)
+  "ENTRADA_PATRIMONIO", // Entrada nova no patrimônio
+  "PEDIDO_PATRIMONIO", // Transferência Patrimônio -> Estoque Manutenção
+  "ADIANTAMENTO_MANUTENCAO" // Entrada direta no estoque manutenção
 ] as const;
 
 export type TipoMovimento = typeof TIPOS_MOVIMENTO[number];
 
 export const items = pgTable("items", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().$defaultFn(() => uuidv4()),
   setor: text("setor").notNull(),
   codigoGce: text("codigo_gce").notNull(),
   itemNome: text("item_nome").notNull(),
   estoqueMinimo: integer("estoque_minimo").notNull().default(0),
   estoqueAtual: integer("estoque_atual").notNull().default(0),
-  entradaInicial: integer("entrada_inicial").notNull().default(0),
-  patrimonioInicial: integer("patrimonio_inicial").notNull().default(0),
   patrimonioAtual: integer("patrimonio_atual").notNull().default(0),
-  pedidoPatrimonio: integer("pedido_patrimonio").notNull().default(0),
   statusEstoque: text("status_estoque").notNull().default("Estoque OK"),
-  valorReferencia: doublePrecision("valor_referencia"),
+  validadeValorReferencia: timestamp("validade_valor_referencia"), // Anteriormente Data Referencia
   ata: text("ata"),
-  compra: text("compra"),
-  numeroPedido: text("numero_pedido"),
-  dataGeral: timestamp("data_geral"),
-  dataEntradaPatrimonio: timestamp("data_entrada_patrimonio"),
-  dataSaida: timestamp("data_saida"),
-  dataRetorno: timestamp("data_retorno"),
+  validadeAta: timestamp("validade_ata"),
   dataAtualizacao: timestamp("data_atualizacao"),
-  dataCompra: timestamp("data_compra"),
   observacoes: text("observacoes"),
   ativo: boolean("ativo").notNull().default(true),
 });
 
 export const movimentos = pgTable("movimentos", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().$defaultFn(() => uuidv4()),
   itemId: text("item_id").notNull().references(() => items.id, { onDelete: "cascade" }),
   tipo: text("tipo").notNull(),
   quantidade: integer("quantidade").notNull(),
   responsavel: text("responsavel"),
-  origem: text("origem"),
-  destino: text("destino"),
+  numeroChamado: text("numero_chamado"),
+  setor: text("setor"), // Classificação da demanda
   ata: text("ata"),
+  validadeAta: timestamp("validade_ata"),
   numeroPedido: text("numero_pedido"),
+  validadeValorReferencia: timestamp("validade_valor_referencia"), // Novo nome para data_referencia
   valorUnitarioRef: doublePrecision("valor_unitario_ref"),
   dataMovimento: timestamp("data_movimento").notNull().defaultNow(),
   observacoes: text("observacoes"),
+  usuarioAd: text("usuario_ad"),
 });
 
 export const itemsRelations = relations(items, ({ many }) => ({
@@ -86,12 +80,20 @@ export const movimentosRelations = relations(movimentos, ({ one }) => ({
   }),
 }));
 
-export const insertItemSchema = createInsertSchema(items).omit({
+export const insertItemSchema = createInsertSchema(items, {
+  validadeValorReferencia: z.coerce.date().nullable().optional(),
+  validadeAta: z.coerce.date().nullable().optional(),
+  dataAtualizacao: z.coerce.date().optional(),
+}).omit({
   id: true,
   statusEstoque: true,
 });
 
-export const insertMovimentoSchema = createInsertSchema(movimentos).omit({
+export const insertMovimentoSchema = createInsertSchema(movimentos, {
+  validadeValorReferencia: z.coerce.date().nullable().optional(),
+  validadeAta: z.coerce.date().nullable().optional(),
+  dataMovimento: z.coerce.date().optional(),
+}).omit({
   id: true,
 });
 
@@ -101,14 +103,16 @@ export type InsertMovimento = z.infer<typeof insertMovimentoSchema>;
 export type Movimento = typeof movimentos.$inferSelect;
 
 export const users = pgTable("users", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id").primaryKey().$defaultFn(() => uuidv4()),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  role: text("role").notNull().default("manutencao"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  role: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

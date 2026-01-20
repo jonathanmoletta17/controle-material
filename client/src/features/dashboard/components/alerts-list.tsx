@@ -1,10 +1,14 @@
+import { differenceInDays, addMonths, isBefore } from "date-fns";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { StatusBadge } from "@/features/inventory/components/status-badge";
-import { AlertTriangle, ArrowRight } from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarClock, AlertOctagon } from "lucide-react";
 import type { Item } from "@shared/schema";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Badge } from "@/shared/components/ui/badge";
+
+import { getItemAlerts } from "@/features/inventory/utils/alerts";
 
 interface AlertsListProps {
   items: Item[];
@@ -12,16 +16,10 @@ interface AlertsListProps {
   maxItems?: number;
 }
 
-function getDisplayStatus(item: Item): "Estoque OK" | "Baixo Estoque" | "Desativado" | "Negativo" {
-  if (!item.ativo) return "Desativado";
-  if (item.estoqueAtual < 0) return "Negativo";
-  if (item.estoqueAtual <= item.estoqueMinimo) return "Baixo Estoque";
-  return "Estoque OK";
-}
-
-export function AlertsList({ items, isLoading, maxItems = 5 }: AlertsListProps) {
+export function AlertsList({ items, isLoading, maxItems = 10 }: AlertsListProps) {
   const alertItems = items
-    .filter(item => !item.ativo || item.estoqueAtual < 0 || item.estoqueAtual <= item.estoqueMinimo)
+    .map(item => ({ item, alerts: getItemAlerts(item) }))
+    .filter(x => x.alerts.length > 0)
     .slice(0, maxItems);
 
   if (isLoading) {
@@ -30,7 +28,7 @@ export function AlertsList({ items, isLoading, maxItems = 5 }: AlertsListProps) 
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <AlertTriangle className="h-5 w-5 text-chart-4" />
-            Alertas de Estoque
+            Alertas de Estoque e Validade
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -56,7 +54,7 @@ export function AlertsList({ items, isLoading, maxItems = 5 }: AlertsListProps) 
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <AlertTriangle className="h-5 w-5 text-chart-2" />
-            Alertas de Estoque
+            Alertas
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -66,7 +64,7 @@ export function AlertsList({ items, isLoading, maxItems = 5 }: AlertsListProps) 
             </div>
             <p className="text-sm font-medium">Tudo em ordem!</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Nao ha itens com estoque baixo ou problemas
+              Sem baixo estoque ou vencimentos proximos.
             </p>
           </div>
         </CardContent>
@@ -79,28 +77,39 @@ export function AlertsList({ items, isLoading, maxItems = 5 }: AlertsListProps) 
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <AlertTriangle className="h-5 w-5 text-chart-4" />
-          Alertas de Estoque
-          <span className="ml-auto text-sm font-normal text-muted-foreground">
-            {alertItems.length} alerta{alertItems.length !== 1 ? "s" : ""}
-          </span>
+          Alertas ({alertItems.length})
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-1">
-          {alertItems.map((item) => (
+          {alertItems.map(({ item, alerts }) => (
             <div
               key={item.id}
-              className="flex items-center justify-between py-2 px-2 rounded-md hover-elevate"
+              className="flex items-center justify-between py-3 px-2 rounded-md hover:bg-muted/50 transition-colors border-b last:border-0"
               data-testid={`alert-item-${item.id}`}
             >
-              <div className="flex flex-col min-w-0 flex-1">
+              <div className="flex flex-col min-w-0 flex-1 gap-1">
                 <span className="font-medium text-sm truncate">{item.itemNome}</span>
                 <span className="text-xs text-muted-foreground font-mono">
-                  {item.codigoGce} - Estoque: {item.estoqueAtual}/{item.estoqueMinimo}
+                  {item.codigoGce}
                 </span>
+
+                {/* Alert Badges */}
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {alerts.map((alert, idx) => (
+                    <Badge
+                      key={idx}
+                      variant={alert.color === 'warning' ? 'outline' : (alert.color as any)}
+                      className={`text-[10px] h-5 px-1.5 gap-1 ${alert.color === 'warning' ? 'text-yellow-600 border-yellow-600 bg-yellow-50 dark:bg-yellow-900/10' : ''}`}
+                    >
+                      {alert.icon && <alert.icon className="h-3 w-3" />}
+                      {alert.label}
+                    </Badge>
+                  ))}
+                </div>
               </div>
               <div className="flex items-center gap-2 ml-3">
-                <StatusBadge status={getDisplayStatus(item)} size="sm" showIcon={false} />
+                {/* Stock Status is already shown in alerts if critical, but we can keep the main badge or hide it to avoid clutter. Let's hide it if alerts are shown. */}
                 <Button variant="ghost" size="icon" asChild>
                   <Link href={`/items/${item.id}`}>
                     <ArrowRight className="h-4 w-4" />

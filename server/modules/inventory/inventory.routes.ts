@@ -27,7 +27,9 @@ router.get("/items/:id", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/items", async (req: Request, res: Response) => {
+import { requireAdmin } from "../auth/middleware";
+
+router.post("/items", requireAdmin, async (req: Request, res: Response) => {
   try {
     const parsed = insertItemSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -44,7 +46,7 @@ router.post("/items", async (req: Request, res: Response) => {
   }
 });
 
-router.put("/items/:id", async (req: Request, res: Response) => {
+router.put("/items/:id", requireAdmin, async (req: Request, res: Response) => {
   try {
     const partialSchema = insertItemSchema.partial();
     const parsed = partialSchema.safeParse(req.body);
@@ -65,7 +67,7 @@ router.put("/items/:id", async (req: Request, res: Response) => {
   }
 });
 
-router.delete("/items/:id", async (req: Request, res: Response) => {
+router.delete("/items/:id", requireAdmin, async (req: Request, res: Response) => {
   try {
     const deleted = await inventoryService.deleteItem(req.params.id);
     if (!deleted) {
@@ -90,7 +92,25 @@ router.get("/items/:id/movements", async (req: Request, res: Response) => {
 
 router.post("/items/:id/movements", async (req: Request, res: Response) => {
   try {
-    const data = { ...req.body, itemId: req.params.id };
+    const user = req.user as any;
+    const role = user?.role || "manutencao";
+
+    // RBAC for Movement Type
+    const restrictedTypes = ["ENTRADA_PATRIMONIO", "PEDIDO_PATRIMONIO", "ADIANTAMENTO_MANUTENCAO"];
+    if (role === "manutencao" && restrictedTypes.includes(req.body.tipo)) {
+      return res.status(403).json({ error: "Seu perfil não permite este tipo de movimentação." });
+    }
+
+    if (role === "patrimonio" && req.body.tipo !== "ENTRADA_PATRIMONIO") {
+      return res.status(403).json({ error: "Seu perfil permite apenas Entrada de Patrimônio." });
+    }
+
+    const data = {
+      ...req.body,
+      itemId: req.params.id,
+      usuarioAd: user?.username || "Anonymous"
+    };
+
     const parsed = insertMovimentoSchema.safeParse(data);
     if (!parsed.success) {
       return res.status(400).json({
@@ -103,6 +123,39 @@ router.post("/items/:id/movements", async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error creating movement:", error);
     res.status(500).json({ error: error.message || "Failed to create movement" });
+  }
+});
+
+router.get("/movements", async (req: Request, res: Response) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    if (limit) {
+      const movements = await inventoryService.getRecentMovements(limit);
+      res.json(movements);
+    } else {
+      const movements = await inventoryService.getAllMovements();
+      res.json(movements);
+    }
+  } catch (error) {
+    console.error("Error fetching movements:", error);
+    res.status(500).json({ error: "Failed to fetch movements" });
+  }
+});
+
+router.get("/movements/search", async (req: Request, res: Response) => {
+  try {
+    const filters = {
+      startDate: req.query.startDate as string,
+      endDate: req.query.endDate as string,
+      tipo: req.query.tipo as string,
+      setor: req.query.setor as string,
+      itemId: req.query.itemId as string,
+    };
+    const movements = await inventoryService.getFilteredMovements(filters);
+    res.json(movements);
+  } catch (error) {
+    console.error("Error searching movements:", error);
+    res.status(500).json({ error: "Failed to search movements" });
   }
 });
 

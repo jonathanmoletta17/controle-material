@@ -23,6 +23,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+docker-compose.yml
 
 # Database
 sqlite.db
@@ -34,3 +35,9 @@ attached_assets/*.tsv
 
 # Misc
 migrations/*.tmp
+
+# Debug artifacts
+*.png
+app_logs.txt
+
+
