@@ -69,10 +69,10 @@ export default function ItemDetail() {
         description: "As alteracoes foram salvas com sucesso.",
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
-        title: "Erro",
-        description: "Nao foi possivel atualizar o item.",
+        title: "Erro ao atualizar item",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -92,10 +92,10 @@ export default function ItemDetail() {
         description: "O estoque foi atualizado.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
-        title: "Erro",
-        description: error?.message || "Nao foi possivel registrar a movimentacao.",
+        title: "Erro na movimentacao",
+        description: error.message,
         variant: "destructive",
       });
     },

@@ -6,7 +6,8 @@ import {
   Package,
   Users,
   LogOut,
-  Tag
+  Tag,
+  UserRoundCog
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -28,7 +29,7 @@ const mainItems = [
 ];
 
 const toolItems = [
-  // { title: "Importar Planilha", url: "/import", icon: Upload }, // Hidden by user request
+  // { title: "Importar Planilha", url: "/import", icon: Upload },
   { title: "Relatorios", url: "/reports", icon: FileText },
   { title: "Emissão de Etiquetas", url: "/labels", icon: Tag },
 ];
@@ -121,6 +122,18 @@ export function AppSidebar() {
                     <Link href="/users">
                       <Users className="h-4 w-4" />
                       <span>Usuários</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/responsaveis")}
+                    data-testid="sidebar-responsaveis"
+                  >
+                    <Link href="/responsaveis">
+                      <UserRoundCog className="h-4 w-4" />
+                      <span>Responsáveis</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

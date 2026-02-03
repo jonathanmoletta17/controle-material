@@ -7,7 +7,7 @@ import {
   movimentos,
 } from "@shared/schema";
 import { db } from "../../db";
-import { eq, sql, and, gte, lte, getTableColumns } from "drizzle-orm";
+import { eq, sql, and, gte, lte, getTableColumns, inArray } from "drizzle-orm";
 
 class InventoryService {
   async getFilteredMovements(filters: {
@@ -28,7 +28,11 @@ class InventoryService {
       conditions.push(lte(movimentos.dataMovimento, end));
     }
     if (filters.tipo) {
-      conditions.push(eq(movimentos.tipo, filters.tipo));
+      if (filters.tipo.includes(',')) {
+        conditions.push(inArray(movimentos.tipo, filters.tipo.split(',')));
+      } else {
+        conditions.push(eq(movimentos.tipo, filters.tipo));
+      }
     }
     if (filters.setor) {
       conditions.push(eq(movimentos.setor, filters.setor));
@@ -148,6 +152,10 @@ class InventoryService {
     return result.length > 0;
   }
 
+  async deleteAllItems(): Promise<void> {
+    await db.delete(items);
+  }
+
   async getMovimentos(itemId: string): Promise<Movimento[]> {
     return db
       .select()
@@ -175,6 +183,16 @@ class InventoryService {
         // Saída do estoque para uso
         requireField(insertMovimento.numeroChamado, "Número do Chamado");
         requireField(insertMovimento.setor, "Setor");
+        requireField(insertMovimento.responsavel, "Responsável");
+
+        if (item.estoqueAtual < Math.abs(insertMovimento.quantidade)) {
+          throw new Error(`Estoque de Manutenção insuficiente (${item.estoqueAtual}) para esta retirada.`);
+        }
+        quantidadeAlteracaoEstoque = -Math.abs(insertMovimento.quantidade);
+        break;
+
+      case "RETIRADA_CONSERVACAO":
+        // Saída do estoque para conservação
         requireField(insertMovimento.responsavel, "Responsável");
 
         if (item.estoqueAtual < Math.abs(insertMovimento.quantidade)) {
@@ -321,8 +339,20 @@ class InventoryService {
       .where(
         sql`${items.ativo} = false 
         OR ${items.estoqueAtual} <= ${items.estoqueMinimo}
-        OR (${items.validadeValorReferencia} IS NOT NULL AND ${items.validadeValorReferencia} <= ${threeMonthsFromNow})
-        OR (${items.validadeAta} IS NOT NULL AND ${items.validadeAta} <= ${threeMonthsFromNow})`
+        OR (
+          -- BOTH dates exist: BOTH must be expired/expiring
+          (${items.validadeValorReferencia} IS NOT NULL AND ${items.validadeAta} IS NOT NULL 
+           AND ${items.validadeValorReferencia} <= ${threeMonthsFromNow} 
+           AND ${items.validadeAta} <= ${threeMonthsFromNow})
+          OR
+          -- Only Ref exists: It must be expired/expiring
+          (${items.validadeValorReferencia} IS NOT NULL AND ${items.validadeAta} IS NULL 
+           AND ${items.validadeValorReferencia} <= ${threeMonthsFromNow})
+          OR
+          -- Only Ata exists: It must be expired/expiring
+          (${items.validadeValorReferencia} IS NULL AND ${items.validadeAta} IS NOT NULL 
+           AND ${items.validadeAta} <= ${threeMonthsFromNow})
+        )`
       );
   }
 }

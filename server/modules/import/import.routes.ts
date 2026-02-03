@@ -195,43 +195,17 @@ router.post("/import", upload.single("file"), async (req: Request, res: Response
     }
 
     // 2. Persist Unified Data
+    // CLEAR DATABASE BEFORE IMPORT
+    await inventoryService.deleteAllItems();
+
     for (const [key, itemData] of consolidatedItems) {
       try {
-        // If it was a generated key for adiantamento, revert the search key to the original "ADIANTAMENTO" string or keep separate?
-        // Actually, for DB storage, we want the field 'codigoGce' to be "ADIANTAMENTO" if that was the input.
-        // But for 'getItemByCodigo' logic, we need to be careful.
-        // If we search by "ADIANTAMENTO", we find *one* of them.
-        // Since we are doing a FULL import which likely is a "State Reset" or "Update All",
-        // handling Adiantamento updates is tricky if we don't have IDs.
-        // Current logic: Create New if not found.
-        // But for Adiantamento, we ALWAYS create new? Or try to match?
-        // Since we have no unique ID for Adiantamento lines in Excel, assume we always CREATE them if they don't look like duplicates?
-        // Or simpler: We treat this import as "Upsert by GCE".
-        // For Adiantamento: We just insert them as new items (or update if we could somehow link them, but we can't).
-        // Safest for Adiantamento: Insert as new if we can't match strictly.
-        // HOWEVER, to avoid infinite duplication on multiple imports, we usually need an ID.
-        // Given constraints: We will treat Adiantamento as "Create New" or "Update if exact match"?
-        // Let's rely on standard upsert for GCE, and "Create" for Adiantamento.
+        // Since we wiped the DB, we can just create new items.
+        // Adiantamento or Standard - all are new.
+        await inventoryService.createItem(itemData);
+        results.imported++;
+        results.details.push({ codigo: itemData.codigoGce, status: "success", setor: itemData.setor });
 
-        const isAdiantamento = key.startsWith("ADIANTAMENTO-") && itemData.codigoGce.toUpperCase().includes("ADIANTAMENTO");
-
-        if (isAdiantamento) {
-          // Always create new entry for Adiantamento to avoid merging dissimilar items
-          await inventoryService.createItem(itemData);
-          results.imported++;
-          results.details.push({ codigo: "ADIANTAMENTO", status: "success", setor: itemData.setor });
-        } else {
-          // Standard Item
-          const existingItem = await inventoryService.getItemByCodigo(itemData.codigoGce);
-          if (existingItem) {
-            await inventoryService.updateItem(existingItem.id, itemData);
-            results.imported++;
-          } else {
-            await inventoryService.createItem(itemData);
-            results.imported++;
-            results.details.push({ codigo: itemData.codigoGce, status: "success", setor: itemData.setor });
-          }
-        }
       } catch (e: any) {
         results.errors++;
         results.details.push({ codigo: itemData.codigoGce, error: e.message, status: "error" });

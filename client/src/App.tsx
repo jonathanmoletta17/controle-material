@@ -20,6 +20,7 @@ import NotFound from "@/shared/pages/NotFoundPage";
 import LoginPage from "@/features/auth/login-page";
 import UsersPage from "@/features/auth/users-page";
 import LabelPrinting from "@/features/labels/pages/LabelPrintingPage";
+import ResponsaveisPage from "@/features/admin/pages/ResponsaveisPage";
 
 function AuthenticatedLayout() {
   const style = {
@@ -43,10 +44,11 @@ function AuthenticatedLayout() {
               </Route>
               <Route path="/items" component={ItemsList} />
               <Route path="/items/:id" component={ItemDetail} />
-              <Route path="/import" component={Import} />
+              {/* <Route path="/import" component={Import} /> */}
               <Route path="/reports" component={Reports} />
               <Route path="/labels" component={LabelPrinting} />
               <Route path="/users" component={UsersPage} />
+              <Route path="/responsaveis" component={ResponsaveisPage} />
               <Route component={NotFound} />
             </Switch>
           </main>

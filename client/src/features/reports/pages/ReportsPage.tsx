@@ -51,7 +51,7 @@ export default function Reports() {
       const params = new URLSearchParams({
         startDate: dateRange.start,
         endDate: dateRange.end,
-        tipo: "RETIRADA_MANUTENCAO" // Default focus as requested
+        tipo: "RETIRADA_MANUTENCAO,RETIRADA_CONSERVACAO" // Default focus as requested
       });
       const res = await fetch(`/api/movements/search?${params}`);
       if (!res.ok) throw new Error("Failed to search");

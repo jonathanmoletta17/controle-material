@@ -2,8 +2,23 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    const text = await res.text();
+    try {
+      const json = JSON.parse(text);
+      if (json.error) {
+        throw new Error(json.error);
+      }
+      if (json.message) {
+        throw new Error(json.message);
+      }
+    } catch (e) {
+      // If NOT JSON or JSON without error/message, fall through to using raw text
+      if (e instanceof Error && e.message !== "Unexpected end of JSON input" && !e.message.startsWith("Unexpected token")) {
+        // It was a valid JSON parse that threw our custom error above
+        throw e;
+      }
+    }
+    throw new Error(text || res.statusText);
   }
 }
 
@@ -28,18 +43,18 @@ export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
-      credentials: "include",
-    });
+    async ({ queryKey }) => {
+      const res = await fetch(queryKey.join("/") as string, {
+        credentials: "include",
+      });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
 
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
+      await throwIfResNotOk(res);
+      return await res.json();
+    };
 
 export const queryClient = new QueryClient({
   defaultOptions: {

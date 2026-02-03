@@ -17,6 +17,7 @@ const tipoIcons = {
   ENTRADA_PATRIMONIO: Building,
   PEDIDO_PATRIMONIO: ShoppingCart,
   ADIANTAMENTO_MANUTENCAO: ArrowUp,
+  RETIRADA_CONSERVACAO: ArrowDown,
 };
 
 const tipoColors = {
@@ -25,6 +26,7 @@ const tipoColors = {
   ENTRADA_PATRIMONIO: "bg-muted-foreground text-white", // Patrimônio
   PEDIDO_PATRIMONIO: "bg-chart-5 text-white",      // Pedido
   ADIANTAMENTO_MANUTENCAO: "bg-chart-2 text-white", // Adiantamento
+  RETIRADA_CONSERVACAO: "bg-destructive text-white", // Conservação
 };
 
 export function MovementTimeline({ movimentos, isLoading }: MovementTimelineProps) {
@@ -117,7 +119,7 @@ export function MovementTimeline({ movimentos, isLoading }: MovementTimelineProp
                       <div className="flex items-center gap-2">
                         <MovementBadge tipo={tipo} size="sm" />
                         <span className="font-semibold text-sm">
-                          {tipo === "RETIRADA_MANUTENCAO" || tipo === "PEDIDO_PATRIMONIO" ? "-" : "+"}
+                          {tipo === "RETIRADA_MANUTENCAO" || tipo === "PEDIDO_PATRIMONIO" || tipo === "RETIRADA_CONSERVACAO" ? "-" : "+"}
                           {movimento.quantidade} unidades
                         </span>
                       </div>

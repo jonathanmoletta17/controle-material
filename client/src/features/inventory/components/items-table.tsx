@@ -77,10 +77,10 @@ export function ItemsTable({ items, isLoading, onEdit, onDelete }: ItemsTablePro
   }
 
   return (
-    <div className="rounded-md border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50">
+    <div className="rounded-md border bg-card">
+      <Table containerClassName="h-[calc(100vh-220px)] overflow-auto">
+        <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
+          <TableRow className="hover:bg-muted/50 data-[state=selected]:bg-muted">
             <TableHead className="w-[100px] font-semibold">Codigo</TableHead>
             <TableHead className="font-semibold">Item</TableHead>
 

@@ -16,6 +16,7 @@ const setorColors = {
   REFRIGERACAO: "hsl(var(--chart-2))",
   PEDREIROS: "hsl(var(--muted-foreground))",
   PINTORES: "hsl(var(--chart-3))",
+  CONSERVACAO: "hsl(var(--destructive))",
 };
 
 const setorLabels: Record<string, string> = {
@@ -25,29 +26,42 @@ const setorLabels: Record<string, string> = {
   REFRIGERACAO: "Refrigeracao",
   PEDREIROS: "Pedreiros",
   PINTORES: "Pintores",
+  CONSERVACAO: "Conservação",
 };
 
 export function ConsumptionChart({ movements, isLoading }: ConsumptionChartProps) {
-  // Aggregate withdrawals by sector
-  const data = Object.keys(setorLabels).map((key) => {
-    // Filter movements: Needs to be "RETIRADA_MANUTENCAO" and match sector
-    const count = movements.filter(
-      (m) =>
-        m.tipo === "RETIRADA_MANUTENCAO" &&
-        m.setor === key
-    ).length;
+  // Aggregate withdrawals by sector dynamically
+  const aggregated = movements
+    .filter(m => (m.tipo === "RETIRADA_MANUTENCAO" && m.setor) || m.tipo === "RETIRADA_CONSERVACAO")
+    .reduce((acc, m) => {
+      const sector = m.tipo === "RETIRADA_CONSERVACAO" ? "CONSERVACAO" : m.setor!;
+      acc[sector] = (acc[sector] || 0) + m.quantidade;
+      return acc;
+    }, {} as Record<string, number>);
+
+  const data = Object.entries(aggregated).map(([sector, volume]) => {
+    // Try to find a matching key for color/label lookup by normalizing
+    // e.g. "Elétrica" -> "ELETRICA"
+    const normalizedKey = sector
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toUpperCase();
+
+    // Use mapped label if available (for consistent casing), otherwise use DB value
+    const label = Object.entries(setorLabels).find(([k]) => k === normalizedKey)?.[1] || sector;
+
+    // Find color
+    const colorKey = Object.keys(setorColors).find(k => k === normalizedKey) || "OTHER";
+    const color = setorColors[colorKey as keyof typeof setorColors] || "hsl(var(--primary))";
 
     return {
-      setor: setorLabels[key],
-      key,
-      count, // Number of withdrawal operations (or quantity? Let's use count for "Activity" or sum quantity for "Volume")
-      // User asked "setor consumindo mais", usually quantity is better but count is also good for activity.
-      // Let's sum Quantity for volume.
-      volume: movements
-        .filter((m) => m.tipo === "RETIRADA_MANUTENCAO" && m.setor === key)
-        .reduce((sum, m) => sum + m.quantidade, 0)
+      setor: label,
+      originalKey: sector, // helpful for debugging or keys
+      count: 0, // removed count as we are focusing on volume
+      volume,
+      fill: color
     };
-  });
+  }).sort((a, b) => b.volume - a.volume); // Sort by highest consumption
 
   if (isLoading) {
     return (
@@ -100,8 +114,8 @@ export function ConsumptionChart({ movements, isLoading }: ConsumptionChartProps
               <Bar dataKey="volume" radius={[0, 4, 4, 0]}>
                 {data.map((entry) => (
                   <Cell
-                    key={entry.key}
-                    fill={setorColors[entry.key as keyof typeof setorColors] || "hsl(var(--primary))"}
+                    key={entry.originalKey}
+                    fill={entry.fill}
                   />
                 ))}
               </Bar>

@@ -29,7 +29,8 @@ export const TIPOS_MOVIMENTO = [
   "RETORNO_MANUTENCAO", // Devolução ao estoque (requer chamado)
   "ENTRADA_PATRIMONIO", // Entrada nova no patrimônio
   "PEDIDO_PATRIMONIO", // Transferência Patrimônio -> Estoque Manutenção
-  "ADIANTAMENTO_MANUTENCAO" // Entrada direta no estoque manutenção
+  "ADIANTAMENTO_MANUTENCAO", // Entrada direta no estoque manutenção
+  "RETIRADA_CONSERVACAO" // Retirada pela equipe de conservação
 ] as const;
 
 export type TipoMovimento = typeof TIPOS_MOVIMENTO[number];
@@ -67,6 +68,8 @@ export const movimentos = pgTable("movimentos", {
   dataMovimento: timestamp("data_movimento").notNull().defaultNow(),
   observacoes: text("observacoes"),
   usuarioAd: text("usuario_ad"),
+  requerente: text("requerente"),
+  nomeChamado: text("nome_chamado"),
 });
 
 export const itemsRelations = relations(items, ({ many }) => ({
@@ -108,6 +111,20 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   role: text("role").notNull().default("manutencao"),
 });
+
+export const responsaveis = pgTable("responsaveis", {
+  id: text("id").primaryKey().$defaultFn(() => uuidv4()),
+  nome: text("nome").notNull(),
+  idFuncional: text("id_funcional").notNull(),
+  ativo: boolean("ativo").notNull().default(true),
+});
+
+export const insertResponsavelSchema = createInsertSchema(responsaveis).omit({
+  id: true,
+});
+
+export type InsertResponsavel = z.infer<typeof insertResponsavelSchema>;
+export type Responsavel = typeof responsaveis.$inferSelect;
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,

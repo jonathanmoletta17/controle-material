@@ -1,6 +1,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Form,
   FormControl,
@@ -19,15 +22,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { TIPOS_MOVIMENTO, SETORES, insertMovimentoSchema } from "@shared/schema";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/shared/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/ui/popover";
+import { TIPOS_MOVIMENTO, SETORES, insertMovimentoSchema, Responsavel } from "@shared/schema";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/auth-context";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+
+interface GlpiTicketData {
+  id: number;
+  name: string;
+  requester_name?: string;
+  category_name?: string;
+  mapped_sector?: any;
+  status: any;
+}
 
 const formSchema = insertMovimentoSchema.extend({
   quantidade: z.coerce.number().refine((val) => val !== 0, "Quantidade nao pode ser zero"),
   valorUnitarioRef: z.coerce.number().min(0).nullable(),
   validadeValorReferencia: z.coerce.date().nullable().optional(),
   validadeAta: z.coerce.date().nullable().optional(),
+  requerente: z.string().optional(),
+  nomeChamado: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -38,6 +67,7 @@ const tipoLabels = {
   ENTRADA_PATRIMONIO: "Entrada (Patrimônio)",
   PEDIDO_PATRIMONIO: "Pedido (Patrimônio -> Manutenção)",
   ADIANTAMENTO_MANUTENCAO: "Adiantamento (Manutenção)",
+  RETIRADA_CONSERVACAO: "Retirada (Conservação)",
 };
 
 interface MovementFormProps {
@@ -64,11 +94,24 @@ export function MovementForm({ itemId, onSubmit, isPending, onCancel }: Movement
       validadeValorReferencia: null,
       validadeAta: null,
       observacoes: "",
+      requerente: "",
+      nomeChamado: "",
     },
   });
 
+  const [ticketData, setTicketData] = useState<GlpiTicketData | null>(null);
+  const [isFetchingTicket, setIsFetchingTicket] = useState(false);
+  const { toast } = useToast();
+
+  // Combobox state
+  const [openResponsavel, setOpenResponsavel] = useState(false);
+
+  const { data: responsaveis = [] } = useQuery<Responsavel[]>({
+    queryKey: ["/api/responsaveis"],
+  });
+
   const availableTipos = user?.role === "manutencao"
-    ? TIPOS_MOVIMENTO.filter(t => t === "RETIRADA_MANUTENCAO" || t === "RETORNO_MANUTENCAO")
+    ? TIPOS_MOVIMENTO.filter(t => t === "RETIRADA_MANUTENCAO" || t === "RETORNO_MANUTENCAO" || t === "RETIRADA_CONSERVACAO")
     : user?.role === "patrimonio"
       ? TIPOS_MOVIMENTO.filter(t => t === "ENTRADA_PATRIMONIO")
       : TIPOS_MOVIMENTO;
@@ -93,11 +136,19 @@ export function MovementForm({ itemId, onSubmit, isPending, onCancel }: Movement
       }
       if (hasError) return;
     }
+
+    if (data.tipo === "RETIRADA_CONSERVACAO") {
+      if (!data.responsavel) {
+        form.setError("responsavel", { message: "Responsavel e obrigatorio" });
+        return;
+      }
+    }
     onSubmit(data);
   };
 
   const tipoValue = form.watch("tipo");
   const requiresChamado = tipoValue === "RETIRADA_MANUTENCAO" || tipoValue === "RETORNO_MANUTENCAO";
+  const requiresResponsavel = requiresChamado || tipoValue === "RETIRADA_CONSERVACAO";
 
   return (
     <Form {...form}>
@@ -160,13 +211,57 @@ export function MovementForm({ itemId, onSubmit, isPending, onCancel }: Movement
                 <FormItem>
                   <FormLabel>Numero do Chamado *</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Ex: 123456"
-                      {...field}
-                      value={field.value ?? ""}
-                      data-testid="input-numero-chamado"
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Ex: 123456"
+                        {...field}
+                        value={field.value ?? ""}
+                        onBlur={(e) => {
+                          field.onBlur();
+                          const val = e.target.value;
+                          if (val && !isNaN(Number(val))) {
+                            setIsFetchingTicket(true);
+                            fetch(`/api/glpi/tickets/${val}`)
+                              .then(res => {
+                                if (!res.ok) throw new Error("Chamado nao encontrado");
+                                return res.json();
+                              })
+                              .then(data => {
+                                if (data) {
+                                  setTicketData(data);
+                                  if (data.requester_name) {
+                                    // form.setValue("responsavel", data.requester_name); // Removed auto-fill for responsible
+                                    form.setValue("requerente", data.requester_name);
+                                  }
+                                  if (data.name) {
+                                    form.setValue("nomeChamado", data.name);
+                                  }
+                                  if (data.mapped_sector) {
+                                    form.setValue("setor", data.mapped_sector);
+                                    toast({ title: "Setor detectado", description: `Categoria "${data.category_name}" mapeada para ${data.mapped_sector}` });
+                                  }
+                                  toast({ title: "Chamado encontrado", description: data.name });
+                                }
+                              })
+                              .catch(() => {
+                                setTicketData(null);
+                                // Don't auto-clear fields to avoid annoyance
+                              })
+                              .finally(() => setIsFetchingTicket(false));
+                          }
+                        }}
+                        data-testid="input-numero-chamado"
+                      />
+                      {isFetchingTicket && <Loader2 className="h-4 w-4 animate-spin my-auto" />}
+                    </div>
                   </FormControl>
+                  {ticketData && (
+                    <div className="text-xs bg-muted p-2 rounded mt-1 border">
+                      <p className="font-semibold">{ticketData.name}</p>
+                      <p>Status: {ticketData.status} | Requerente: {ticketData.requester_name}</p>
+                      {ticketData.category_name && <p className="text-muted-foreground">Categoria: {ticketData.category_name}</p>}
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -177,21 +272,17 @@ export function MovementForm({ itemId, onSubmit, isPending, onCancel }: Movement
               name="setor"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Setor *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
-                    <FormControl>
-                      <SelectTrigger data-testid="select-setor">
-                        <SelectValue placeholder="Selecione o setor" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {SETORES.map((setor) => (
-                        <SelectItem key={setor} value={setor}>
-                          {setor.charAt(0) + setor.slice(1).toLowerCase()}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Setor (Automático)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Setor..."
+                      {...field}
+                      value={field.value ?? ""}
+                      readOnly
+                      className="bg-muted"
+                      data-testid="input-setor"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -203,14 +294,99 @@ export function MovementForm({ itemId, onSubmit, isPending, onCancel }: Movement
           control={form.control}
           name="responsavel"
           render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Responsavel {requiresResponsavel ? "*" : ""}</FormLabel>
+              <Popover open={openResponsavel} onOpenChange={setOpenResponsavel}>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value
+                        ? responsaveis.find(
+                          (responsavel) => responsavel.nome === field.value
+                        )?.nome || field.value
+                        : "Selecione o responsável"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Buscar responsável..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhum responsável encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {responsaveis.map((responsavel) => (
+                          <CommandItem
+                            value={responsavel.nome}
+                            key={responsavel.id}
+                            onSelect={() => {
+                              form.setValue("responsavel", responsavel.nome);
+                              setOpenResponsavel(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                responsavel.nome === field.value
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            {responsavel.nome}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="requerente"
+          render={({ field }) => (
             <FormItem>
-              <FormLabel>Responsavel {requiresChamado ? "*" : ""}</FormLabel>
+              <FormLabel>Requerente (GLPI)</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Nome do responsavel"
+                  placeholder="Nome do requerente"
                   {...field}
                   value={field.value ?? ""}
-                  data-testid="input-responsavel"
+                  readOnly
+                  className="bg-muted"
+                  data-testid="input-requerente"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="nomeChamado"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Titulo do Chamado</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Titulo do chamado"
+                  {...field}
+                  value={field.value ?? ""}
+                  readOnly
+                  className="bg-muted"
+                  data-testid="input-nome-chamado"
                 />
               </FormControl>
               <FormMessage />

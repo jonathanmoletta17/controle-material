@@ -14,6 +14,11 @@ const tipoConfig: Record<TipoMovimento, { className: string; icon: any; label: s
     icon: ArrowDown,
     label: "Saida",
   },
+  RETIRADA_CONSERVACAO: {
+    className: "bg-destructive/10 text-destructive border-destructive/30",
+    icon: ArrowDown,
+    label: "Conservação",
+  },
   RETORNO_MANUTENCAO: {
     className: "bg-chart-1/10 text-chart-1 border-chart-1/30",
     icon: RotateCcw,

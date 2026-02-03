@@ -68,14 +68,16 @@ app.use((req, res, next) => {
 
 import session from "express-session";
 import { setupPassport } from "./modules/auth/passport.config";
-import MemoryStore from "memorystore";
+import connectPgSimple from "connect-pg-simple";
+import { pool } from "./db";
 
-const SessionStore = MemoryStore(session);
+const PgSession = connectPgSimple(session);
 
 app.use(
   session({
-    store: new SessionStore({
-      checkPeriod: 86400000,
+    store: new PgSession({
+      pool,
+      createTableIfMissing: true,
     }),
     secret: process.env.SESSION_SECRET || "material_control_secret",
     resave: false,

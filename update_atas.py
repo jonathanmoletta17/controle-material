@@ -159,6 +159,21 @@ def update_atas():
                     print(f"AVISO: Item {codigo_gce} não apareceu ou erro ao clicar.")
                     continue
 
+                # 2.A. Coleta o Nome do Modificador (Nome Real do Item)
+                # O usuário pediu para ler o value do input #NomeModificador após abrir os detalhes
+                item_nome_real = None
+                try:
+                    nome_selector = "#NomeModificador"
+                    page.wait_for_selector(nome_selector, timeout=5000)
+                    item_nome_real = page.locator(nome_selector).get_attribute("value")
+                    
+                    if item_nome_real:
+                        print(f"Nome do Item detectado: {item_nome_real}")
+                    else:
+                        print("AVISO: Campo NomeModificador vazio.")
+                except Exception as e:
+                     print(f"AVISO: Não foi possível ler o NomeModificador: {e}")
+
                 # 3. Coleta Validade do Valor de Referência (comum a todos os casos)
                 try:
                     page.wait_for_selector("#DataValidadeVuma", timeout=5000)
@@ -227,13 +242,22 @@ def update_atas():
                     ata_num = 'Sem Ata Vigente'
 
                 # 6. Atualiza o banco de dados com os dados coletados
-                print(f"Atualizando DB: Ata={ata_num}, Validade={validade_ata}, Valor Ata={valor_unitario_ata}, Validade Ref={validade_valor_referencia}, Valor Ref={valor_unitario_referencia}")
+                print(f"Atualizando DB: Nome={item_nome_real}, Ata={ata_num}, Validade={validade_ata}, Valor Ata={valor_unitario_ata}, Validade Ref={validade_valor_referencia}, Valor Ref={valor_unitario_referencia}")
                 try:
-                    cur.execute("""
-                        UPDATE items 
-                        SET ata = %s, validade_ata = %s, valor_unitario_ata = %s, validade_valor_referencia = %s, valor_unitario_referencia = %s
-                        WHERE id = %s
-                    """, (ata_num, validade_ata, valor_unitario_ata, validade_valor_referencia, valor_unitario_referencia, item_id))
+                    # Prepara a query dinamicamente se tiver nome ou não (para não sobrescrever com None se falhar a leitura)
+                    if item_nome_real:
+                         cur.execute("""
+                            UPDATE items 
+                            SET item_nome = %s, ata = %s, validade_ata = %s, valor_unitario_ata = %s, validade_valor_referencia = %s, valor_unitario_referencia = %s
+                            WHERE id = %s
+                        """, (item_nome_real, ata_num, validade_ata, valor_unitario_ata, validade_valor_referencia, valor_unitario_referencia, item_id))
+                    else:
+                        cur.execute("""
+                            UPDATE items 
+                            SET ata = %s, validade_ata = %s, valor_unitario_ata = %s, validade_valor_referencia = %s, valor_unitario_referencia = %s
+                            WHERE id = %s
+                        """, (ata_num, validade_ata, valor_unitario_ata, validade_valor_referencia, valor_unitario_referencia, item_id))
+                        
                     conn.commit()
                     if cur.rowcount > 0:
                         print(f"Item {codigo_gce} atualizado com sucesso.")

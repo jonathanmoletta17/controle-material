@@ -55,10 +55,10 @@ export default function ItemsList() {
         description: "O item foi cadastrado com sucesso.",
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
-        title: "Erro",
-        description: "Nao foi possivel criar o item.",
+        title: "Erro ao criar item",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -76,10 +76,10 @@ export default function ItemsList() {
         description: "As alteracoes foram salvas com sucesso.",
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
-        title: "Erro",
-        description: "Nao foi possivel atualizar o item.",
+        title: "Erro ao atualizar item",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -97,10 +97,10 @@ export default function ItemsList() {
         description: "O item foi removido do sistema.",
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
-        title: "Erro",
-        description: "Nao foi possivel excluir o item.",
+        title: "Erro ao excluir item",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -110,25 +110,52 @@ export default function ItemsList() {
   const [activeFilter, setActiveFilter] = useState<'expired' | 'expiring' | null>(null);
 
   const { expiredCount, expiringCount } = useMemo(() => {
-    const now = new Date();
-    const threeMonthsFromNow = addMonths(now, 3);
-
     let expired = 0;
     let expiring = 0;
 
-    items.forEach(item => {
-      const isRefExpired = item.validadeValorReferencia && isBefore(new Date(item.validadeValorReferencia), now);
-      const isAtaExpired = item.validadeAta && isBefore(new Date(item.validadeAta), now);
+    const nowTime = new Date().setHours(0, 0, 0, 0);
+    const threeMonthsTime = addMonths(nowTime, 3).getTime();
 
-      if (isRefExpired || isAtaExpired) {
-        expired++;
-        return;
+    items.forEach(item => {
+      const refTime = item.validadeValorReferencia ? new Date(item.validadeValorReferencia).getTime() : null;
+      const ataTime = item.validadeAta ? new Date(item.validadeAta).getTime() : null;
+
+      // 1. Check Expired (Strict: Both must be expired if both exist)
+      const isRefExpired = refTime !== null && refTime < nowTime;
+      const isAtaExpired = ataTime !== null && ataTime < nowTime;
+
+      let isExpired = false;
+      if (refTime !== null && ataTime !== null) {
+        isExpired = isRefExpired && isAtaExpired;
+      } else if (refTime !== null) {
+        isExpired = isRefExpired;
+      } else if (ataTime !== null) {
+        isExpired = isAtaExpired;
       }
 
-      const isRefExpiring = item.validadeValorReferencia && isBefore(new Date(item.validadeValorReferencia), threeMonthsFromNow);
-      const isAtaExpiring = item.validadeAta && isBefore(new Date(item.validadeAta), threeMonthsFromNow);
+      if (isExpired) {
+        expired++;
+        return; // Don't count as expiring if already expired
+      }
 
-      if (isRefExpiring || isAtaExpiring) {
+      // 2. Check Expiring (Strict: Both must be in scope AND in Future)
+      const isRefExpiringScope = refTime !== null && refTime <= threeMonthsTime;
+      const isAtaExpiringScope = ataTime !== null && ataTime <= threeMonthsTime;
+
+      const isRefFuture = refTime !== null && refTime >= nowTime;
+      const isAtaFuture = ataTime !== null && ataTime >= nowTime;
+
+      let isExpiring = false;
+      if (refTime !== null && ataTime !== null) {
+        // Both match rule
+        isExpiring = (isRefExpiringScope && isRefFuture) && (isAtaExpiringScope && isAtaFuture);
+      } else if (refTime !== null) {
+        isExpiring = isRefExpiringScope && isRefFuture;
+      } else if (ataTime !== null) {
+        isExpiring = isAtaExpiringScope && isAtaFuture;
+      }
+
+      if (isExpiring) {
         expiring++;
       }
     });
@@ -148,24 +175,55 @@ export default function ItemsList() {
         : true;
 
       if (activeFilter === 'expired') {
-        const now = new Date();
-        const isRefExpired = item.validadeValorReferencia && isBefore(new Date(item.validadeValorReferencia), now);
-        const isAtaExpired = item.validadeAta && isBefore(new Date(item.validadeAta), now);
-        return matchesSearch && matchesLowStock && (isRefExpired || isAtaExpired);
+        const nowTime = new Date().setHours(0, 0, 0, 0);
+
+        const refTime = item.validadeValorReferencia ? new Date(item.validadeValorReferencia).getTime() : null;
+        const ataTime = item.validadeAta ? new Date(item.validadeAta).getTime() : null;
+
+        const isRefExpired = refTime !== null && refTime < nowTime;
+        const isAtaExpired = ataTime !== null && ataTime < nowTime;
+
+        let isExpired = false;
+        if (refTime !== null && ataTime !== null) {
+          isExpired = isRefExpired && isAtaExpired;
+        } else if (refTime !== null) {
+          isExpired = isRefExpired;
+        } else if (ataTime !== null) {
+          isExpired = isAtaExpired;
+        }
+
+        return matchesSearch && matchesLowStock && isExpired;
       }
 
       if (activeFilter === 'expiring') {
-        const now = new Date();
-        const threeMonthsFromNow = addMonths(now, 3);
-        const isRefExpiring = item.validadeValorReferencia &&
-          isBefore(new Date(item.validadeValorReferencia), threeMonthsFromNow) &&
-          !isBefore(new Date(item.validadeValorReferencia), now);
+        const nowTime = new Date().setHours(0, 0, 0, 0);
+        const threeMonthsTime = addMonths(nowTime, 3).getTime();
 
-        const isAtaExpiring = item.validadeAta &&
-          isBefore(new Date(item.validadeAta), threeMonthsFromNow) &&
-          !isBefore(new Date(item.validadeAta), now);
+        const refTime = item.validadeValorReferencia ? new Date(item.validadeValorReferencia).getTime() : null;
+        const ataTime = item.validadeAta ? new Date(item.validadeAta).getTime() : null;
 
-        return matchesSearch && matchesLowStock && (isRefExpiring || isAtaExpiring);
+        const isRefExpiringScope = refTime !== null && refTime <= threeMonthsTime;
+        const isAtaExpiringScope = ataTime !== null && ataTime <= threeMonthsTime;
+
+        // Strict Future Check for "A Vencer" filter
+        const isRefFuture = refTime !== null && refTime >= nowTime;
+        const isAtaFuture = ataTime !== null && ataTime >= nowTime;
+
+        let isExpiring = false;
+
+        if (refTime !== null && ataTime !== null) {
+          // Both must be in expiring scope ( <= 3mo)
+          // AND both must be in future (not expired yet)
+          isExpiring = (isRefExpiringScope && isRefFuture) && (isAtaExpiringScope && isAtaFuture);
+
+        } else if (refTime !== null) {
+          isExpiring = isRefExpiringScope && isRefFuture;
+
+        } else if (ataTime !== null) {
+          isExpiring = isAtaExpiringScope && isAtaFuture;
+        }
+
+        return matchesSearch && matchesLowStock && isExpiring;
       }
 
       return matchesSearch && matchesLowStock;

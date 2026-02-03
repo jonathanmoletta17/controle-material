@@ -36,7 +36,7 @@ export function WithdrawalHistoryChart({ movements, isLoading }: WithdrawalHisto
         const grouped = new Map<string, number>();
 
         // Filter only withdrawals
-        const withdrawals = movements.filter(m => m.tipo === "RETIRADA_MANUTENCAO");
+        const withdrawals = movements.filter(m => m.tipo === "RETIRADA_MANUTENCAO" || m.tipo === "RETIRADA_CONSERVACAO");
 
         withdrawals.forEach(m => {
             if (!m.dataMovimento) return;
