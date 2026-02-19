@@ -81,7 +81,11 @@ export function MovementTimeline({ movimentos, isLoading }: MovementTimelineProp
   }
 
   const sortedMovimentos = [...movimentos].sort(
-    (a, b) => new Date(b.dataMovimento).getTime() - new Date(a.dataMovimento).getTime()
+    (a, b) => {
+      const dateA = a.dataReal ? new Date(a.dataReal).getTime() : new Date(a.dataMovimento).getTime();
+      const dateB = b.dataReal ? new Date(b.dataReal).getTime() : new Date(b.dataMovimento).getTime();
+      return dateB - dateA;
+    }
   );
 
   return (
@@ -123,9 +127,14 @@ export function MovementTimeline({ movimentos, isLoading }: MovementTimelineProp
                           {movimento.quantidade} unidades
                         </span>
                       </div>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(movimento.dataMovimento), "dd MMM yyyy, HH:mm", { locale: ptBR })}
-                      </span>
+                      <div className="flex flex-col items-end">
+                        <span className="text-xs text-muted-foreground font-medium">
+                          {format(movimento.dataReal ? new Date(movimento.dataReal) : new Date(movimento.dataMovimento), "dd MMM yyyy, HH:mm", { locale: ptBR })}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/70" title="Data de registro no sistema">
+                          Registrado: {format(new Date(movimento.dataMovimento), "dd/MM/yy HH:mm", { locale: ptBR })}
+                        </span>
+                      </div>
                     </div>
                     <div className="mt-1 text-sm text-muted-foreground space-y-0.5">
                       {movimento.responsavel && (

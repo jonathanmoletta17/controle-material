@@ -65,7 +65,8 @@ export const movimentos = pgTable("movimentos", {
   numeroPedido: text("numero_pedido"),
   validadeValorReferencia: timestamp("validade_valor_referencia"), // Novo nome para data_referencia
   valorUnitarioRef: doublePrecision("valor_unitario_ref"),
-  dataMovimento: timestamp("data_movimento").notNull().defaultNow(),
+  dataReal: timestamp("data_real").defaultNow(), // Data efetiva do acontecimento (pode ser retroativa)
+  dataMovimento: timestamp("data_movimento").notNull().defaultNow(), // Data de registro no sistema (Audit)
   observacoes: text("observacoes"),
   usuarioAd: text("usuario_ad"),
   requerente: text("requerente"),
@@ -95,6 +96,7 @@ export const insertItemSchema = createInsertSchema(items, {
 export const insertMovimentoSchema = createInsertSchema(movimentos, {
   validadeValorReferencia: z.coerce.date().nullable().optional(),
   validadeAta: z.coerce.date().nullable().optional(),
+  dataReal: z.coerce.date().optional(),
   dataMovimento: z.coerce.date().optional(),
 }).omit({
   id: true,

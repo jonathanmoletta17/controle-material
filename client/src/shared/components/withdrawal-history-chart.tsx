@@ -39,9 +39,10 @@ export function WithdrawalHistoryChart({ movements, isLoading }: WithdrawalHisto
         const withdrawals = movements.filter(m => m.tipo === "RETIRADA_MANUTENCAO" || m.tipo === "RETIRADA_CONSERVACAO");
 
         withdrawals.forEach(m => {
-            if (!m.dataMovimento) return;
+            const rawDate = m.dataReal || m.dataMovimento;
+            if (!rawDate) return;
 
-            const date = new Date(m.dataMovimento);
+            const date = new Date(rawDate);
             let key = "";
             let sortKey = 0; // Timestamp for sorting
 
@@ -69,8 +70,9 @@ export function WithdrawalHistoryChart({ movements, isLoading }: WithdrawalHisto
         const timeGrouped = new Map<number, number>();
 
         withdrawals.forEach(m => {
-            if (!m.dataMovimento) return;
-            const date = new Date(m.dataMovimento);
+            const rawDate = m.dataReal || m.dataMovimento;
+            if (!rawDate) return;
+            const date = new Date(rawDate);
             let timeKey = 0;
 
             if (granularity === "day") {

@@ -108,7 +108,7 @@ export default function Reports() {
   const handleExportFiltered = () => {
     const headers = ["Data", "Item", "Qtd", "Setor", "Responsavel", "N. Chamado"];
     const rows = filteredMovements.map(m => {
-      const dateStr = formatDateSafe(m.dataMovimento);
+      const dateStr = formatDateSafe(m.dataReal || m.dataMovimento);
       return [
         dateStr,
         m.itemNome,
@@ -324,8 +324,8 @@ export default function Reports() {
                   ) : (
                     filteredMovements.map((m: any) => (
                       <TableRow key={m.id}>
-                        <TableCell>
-                          {formatDateSafe(m.dataMovimento)}
+                        <TableCell title={`Registrado em: ${formatDateSafe(m.dataMovimento)}`}>
+                          {formatDateSafe(m.dataReal || m.dataMovimento)}
                         </TableCell>
                         <TableCell>{m.itemNome}</TableCell>
                         <TableCell className="font-bold text-red-600">-{Math.abs(m.quantidade)}</TableCell>

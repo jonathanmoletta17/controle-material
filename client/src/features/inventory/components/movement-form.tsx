@@ -57,6 +57,7 @@ const formSchema = insertMovimentoSchema.extend({
   validadeAta: z.coerce.date().nullable().optional(),
   requerente: z.string().optional(),
   nomeChamado: z.string().optional(),
+  dataReal: z.coerce.date().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -96,6 +97,7 @@ export function MovementForm({ itemId, onSubmit, isPending, onCancel }: Movement
       observacoes: "",
       requerente: "",
       nomeChamado: "",
+      dataReal: new Date(),
     },
   });
 

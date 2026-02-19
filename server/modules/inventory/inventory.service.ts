@@ -20,12 +20,12 @@ class InventoryService {
     const conditions = [];
 
     if (filters.startDate) {
-      conditions.push(gte(movimentos.dataMovimento, new Date(filters.startDate)));
+      conditions.push(gte(sql`COALESCE(${movimentos.dataReal}, ${movimentos.dataMovimento})`, new Date(filters.startDate)));
     }
     if (filters.endDate) {
       const end = new Date(filters.endDate);
       end.setHours(23, 59, 59, 999);
-      conditions.push(lte(movimentos.dataMovimento, end));
+      conditions.push(lte(sql`COALESCE(${movimentos.dataReal}, ${movimentos.dataMovimento})`, end));
     }
     if (filters.tipo) {
       if (filters.tipo.includes(',')) {
@@ -54,6 +54,7 @@ class InventoryService {
         numeroPedido: movimentos.numeroPedido,
         validadeValorReferencia: movimentos.validadeValorReferencia,
         valorUnitarioRef: movimentos.valorUnitarioRef,
+        dataReal: movimentos.dataReal,
         dataMovimento: movimentos.dataMovimento,
         observacoes: movimentos.observacoes,
         usuarioAd: movimentos.usuarioAd,
@@ -63,7 +64,7 @@ class InventoryService {
       .from(movimentos)
       .leftJoin(items, eq(movimentos.itemId, items.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(sql`${movimentos.dataMovimento} DESC`);
+      .orderBy(sql`COALESCE(${movimentos.dataReal}, ${movimentos.dataMovimento}) DESC`);
 
     return result as (Movimento & { itemNome: string; codigoGce: string })[];
   }
@@ -161,7 +162,7 @@ class InventoryService {
       .select()
       .from(movimentos)
       .where(eq(movimentos.itemId, itemId))
-      .orderBy(sql`${movimentos.dataMovimento} DESC`);
+      .orderBy(sql`COALESCE(${movimentos.dataReal}, ${movimentos.dataMovimento}) DESC`);
   }
 
   async createMovimento(insertMovimento: InsertMovimento): Promise<Movimento> {
@@ -262,7 +263,8 @@ class InventoryService {
       .values({
         ...insertMovimento,
         quantidade: quantidadeRegistrada,
-        dataMovimento: insertMovimento.dataMovimento || new Date(),
+        dataReal: insertMovimento.dataReal || insertMovimento.dataMovimento || new Date(),
+        dataMovimento: new Date(), // Audit always now
       })
       .returning();
 
@@ -288,6 +290,7 @@ class InventoryService {
         numeroPedido: movimentos.numeroPedido,
         validadeValorReferencia: movimentos.validadeValorReferencia,
         valorUnitarioRef: movimentos.valorUnitarioRef,
+        dataReal: movimentos.dataReal,
         dataMovimento: movimentos.dataMovimento,
         observacoes: movimentos.observacoes,
         usuarioAd: movimentos.usuarioAd,
@@ -296,7 +299,7 @@ class InventoryService {
       })
       .from(movimentos)
       .leftJoin(items, eq(movimentos.itemId, items.id))
-      .orderBy(sql`${movimentos.dataMovimento} DESC`)
+      .orderBy(sql`COALESCE(${movimentos.dataReal}, ${movimentos.dataMovimento}) DESC`)
       .limit(limit);
 
     return result as (Movimento & { itemNome: string; codigoGce: string })[];
@@ -316,6 +319,7 @@ class InventoryService {
         numeroPedido: movimentos.numeroPedido,
         validadeValorReferencia: movimentos.validadeValorReferencia,
         valorUnitarioRef: movimentos.valorUnitarioRef,
+        dataReal: movimentos.dataReal,
         dataMovimento: movimentos.dataMovimento,
         observacoes: movimentos.observacoes,
         usuarioAd: movimentos.usuarioAd,
@@ -324,7 +328,7 @@ class InventoryService {
       })
       .from(movimentos)
       .leftJoin(items, eq(movimentos.itemId, items.id))
-      .orderBy(sql`${movimentos.dataMovimento} DESC`);
+      .orderBy(sql`COALESCE(${movimentos.dataReal}, ${movimentos.dataMovimento}) DESC`);
 
     return result as (Movimento & { itemNome: string; codigoGce: string })[];
   }
