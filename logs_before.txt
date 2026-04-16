@@ -1,0 +1,3 @@
+5:47:55 PM [express] POST /api/auth/login 200 in 130ms [Session: 1VFzLt... User: joao-dias]
+5:47:55 PM [express] POST /api/auth/login 200 in 88ms [Session: 1VFzLt... User: joao-dias]
+5:49:59 PM [express] GET /api/auth/user 200 in 162ms [Session: hN2LfV... User: none]

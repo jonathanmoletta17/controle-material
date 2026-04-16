@@ -1,0 +1,29 @@
+Starting periodic command scheduler: cron.
+✅ Cron service started successfully
+Cron jobs:
+PATH=/opt/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+SHELL=/bin/bash
+
+# Executa o script de atualização de atas todo Segunda às 08:00
+0 8 * * 1 cd /app && /opt/venv/bin/python3 /app/update_atas.py >> /var/log/cron_update_atas.log 2>&1
+
+# Executa o script de captura de término de vigência de atas toda Segunda às 10:00
+0 10 * * 1 cd /app && /opt/venv/bin/python3 /app/scrape_atas_vigentes.py >> /var/log/cron_scrape_atas.log 2>&1
+
+Iniciando a aplicação...
+
+> rest-express@1.0.0 dev
+> cross-env NODE_ENV=development tsx server/index.ts
+
+5:36:33 PM [express] serving on port 5000
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+5:36:46 PM [express] GET /api/auth/user 200 in 79ms [Session: 1VFzLt... User: joao-dias]
+5:36:47 PM [express] POST /api/auth/login 200 in 29ms [Session: 1VFzLt... User: joao-dias]
+5:36:48 PM [express] POST /api/auth/login 200 in 122ms [Session: 1VFzLt... User: joao-dias]
+5:36:49 PM [express] POST /api/auth/login 200 in 34ms [Session: 1VFzLt... User: joao-dias]
+5:36:49 PM [express] POST /api/auth/login 200 in 26ms [Session: 1VFzLt... User: joao-dias]
+5:37:51 PM [express] GET /api/auth/user 200 in 119ms [Session: 1VFzLt... User: joao-dias]
+5:37:52 PM [express] POST /api/auth/login 200 in 86ms [Session: 1VFzLt... User: joao-dias]
+5:37:52 PM [express] POST /api/auth/login 200 in 33ms [Session: 1VFzLt... User: joao-dias]
+5:42:04 PM [express] POST /api/auth/login 200 in 209ms [Session: 1VFzLt... User: joao-dias]

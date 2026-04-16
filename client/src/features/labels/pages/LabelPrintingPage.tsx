@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Printer, Tag, X, Plus, Trash2, ListPlus } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -20,6 +20,7 @@ import {
 import { Label } from "@/shared/components/ui/label";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import type { Item } from "@shared/schema";
+import { ORIGENS_GCE_LABEL } from "@shared/schema";
 
 const COLORS = [
     { name: "Marrom", value: "#795548", text: "white" },
@@ -31,6 +32,7 @@ const COLORS = [
 ];
 
 const SIZES = [
+    { name: "15cm x 4cm", width: "15cm", height: "4cm" },
     { name: "11cm x 2,5cm", width: "11cm", height: "2.5cm" },
     { name: "7cm x 2cm", width: "7cm", height: "2cm" },
 ];
@@ -49,7 +51,21 @@ export default function LabelPrintingPage() {
     const [selectedSize, setSelectedSize] = useState(SIZES[0]);
     const [selectedColor, setSelectedColor] = useState(COLORS[0]);
     const [quantity, setQuantity] = useState(1);
-    const [queue, setQueue] = useState<QueueItem[]>([]);
+    const [queue, setQueue] = useState<QueueItem[]>(() => {
+        try {
+            const saved = localStorage.getItem("labelPrintingQueue");
+            if (saved) {
+                return JSON.parse(saved);
+            }
+        } catch (e) {
+            console.error("Erro ao carregar fila de etiquetas:", e);
+        }
+        return [];
+    });
+
+    useEffect(() => {
+        localStorage.setItem("labelPrintingQueue", JSON.stringify(queue));
+    }, [queue]);
 
     const { data: items = [], isLoading } = useQuery<Item[]>({
         queryKey: ["/api/items"],
@@ -60,7 +76,7 @@ export default function LabelPrintingPage() {
         return items.filter(
             (item) =>
                 item.itemNome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                item.codigoGce.toLowerCase().includes(searchQuery.toLowerCase())
+                (item.codigoGce ?? "").toLowerCase().includes(searchQuery.toLowerCase())
         ).slice(0, 5);
     }, [items, searchQuery]);
 
@@ -103,10 +119,16 @@ export default function LabelPrintingPage() {
                     </p>
                 </div>
                 {queue.length > 0 && (
-                    <Button size="lg" onClick={handlePrint} className="shadow-xl">
-                        <Printer className="h-5 w-5 mr-2" />
-                        Imprimir {totalLabels} Etiquetas
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        <Button variant="outline" size="lg" onClick={() => setQueue([])}>
+                            <Trash2 className="h-5 w-5 overflow-hidden mr-2" />
+                            Limpar Fila
+                        </Button>
+                        <Button size="lg" onClick={handlePrint} className="shadow-xl">
+                            <Printer className="h-5 w-5 mr-2" />
+                            Imprimir {totalLabels} Etiquetas
+                        </Button>
+                    </div>
                 )}
             </div>
 
@@ -152,7 +174,9 @@ export default function LabelPrintingPage() {
                                                 }}
                                             >
                                                 <div className="font-semibold">{item.itemNome}</div>
-                                                <div className="text-xs text-muted-foreground">{item.codigoGce}</div>
+                                                <div className="text-xs text-muted-foreground">
+                                                  {(!item.origemGce || item.origemGce === "GCE") ? (item.codigoGce ?? "—") : (ORIGENS_GCE_LABEL[item.origemGce as keyof typeof ORIGENS_GCE_LABEL] ?? item.origemGce)}
+                                                </div>
                                             </button>
                                         ))}
                                     </div>
@@ -163,7 +187,9 @@ export default function LabelPrintingPage() {
                                 <div className="p-4 border rounded-lg bg-primary/5 border-primary/20 flex items-center justify-between animate-in slide-in-from-top-2 duration-300">
                                     <div className="min-w-0">
                                         <div className="font-bold text-sm truncate">{selectedItem.itemNome}</div>
-                                        <div className="text-xs text-primary font-mono">{selectedItem.codigoGce}</div>
+                                        <div className="text-xs text-primary font-mono">
+                                          {(!selectedItem.origemGce || selectedItem.origemGce === "GCE") ? (selectedItem.codigoGce ?? "—") : (ORIGENS_GCE_LABEL[selectedItem.origemGce as keyof typeof ORIGENS_GCE_LABEL] ?? selectedItem.origemGce)}
+                                        </div>
                                     </div>
                                     <Button variant="outline" size="sm" onClick={() => setSelectedItem(null)} className="ml-4 shrink-0">
                                         Alterar
@@ -277,7 +303,7 @@ export default function LabelPrintingPage() {
                                                         color: qItem.color.text,
                                                     }}
                                                 >
-                                                    {qItem.item.codigoGce}
+                                                    {qItem.item.origemGce === "GCE" ? (qItem.item.codigoGce ?? "—") : (ORIGENS_GCE_LABEL[qItem.item.origemGce as keyof typeof ORIGENS_GCE_LABEL] ?? qItem.item.origemGce)}
                                                 </div>
 
                                                 <div className="flex-1 min-w-0">
@@ -365,18 +391,18 @@ export default function LabelPrintingPage() {
                                 padding: "2px",
                                 boxSizing: "border-box",
                                 fontFamily: "sans-serif",
-                                fontSize: qItem.size.name.startsWith("11") ? "10pt" : "8pt",
+                                fontSize: qItem.size.name.startsWith("15") ? "12pt" : qItem.size.name.startsWith("11") ? "10pt" : "8pt",
                                 lineHeight: "1.1",
                                 WebkitPrintColorAdjust: "exact",
                                 printColorAdjust: "exact",
                                 pageBreakInside: "avoid"
                             }}
                         >
-                            <div style={{ fontWeight: "bold", textTransform: "uppercase", width: "100%", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+                            <div style={{ fontWeight: "bold", textTransform: "uppercase", width: "100%", wordBreak: "break-word", overflowWrap: "break-word", whiteSpace: "normal", lineHeight: "1.2" }}>
                                 {qItem.item.itemNome}
                             </div>
                             <div style={{ marginTop: "2px", fontFamily: "monospace", letterSpacing: "-0.5px" }}>
-                                {qItem.item.codigoGce}
+                                {(!qItem.item.origemGce || qItem.item.origemGce === "GCE") ? (qItem.item.codigoGce ?? "—") : (ORIGENS_GCE_LABEL[qItem.item.origemGce as keyof typeof ORIGENS_GCE_LABEL] ?? qItem.item.origemGce)}
                             </div>
                         </div>
                     ))

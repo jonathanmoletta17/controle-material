@@ -3,7 +3,7 @@ import passport from "passport";
 
 const router = Router();
 
-router.post("/auth/login", (req, res, next) => {
+router.post("/login", (req, res, next) => {
     passport.authenticate("ad", (err: any, user: any, info: any) => {
         if (err) {
             return next(err);
@@ -20,7 +20,7 @@ router.post("/auth/login", (req, res, next) => {
     })(req, res, next);
 });
 
-router.post("/auth/logout", (req, res, next) => {
+router.post("/logout", (req, res, next) => {
     req.logout((err) => {
         if (err) {
             return next(err);
@@ -29,7 +29,7 @@ router.post("/auth/logout", (req, res, next) => {
     });
 });
 
-router.get("/auth/user", (req, res) => {
+router.get("/user", (req, res) => {
     if (req.isAuthenticated()) {
         const user: any = req.user;
         res.json({ user: { id: user.id, username: user.username, role: user.role } });

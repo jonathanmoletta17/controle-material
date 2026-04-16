@@ -19,8 +19,11 @@ export function setupPassport(app: any) {
                 return done(null, false, { message: "LDAP_SERVER configuration missing" });
             }
 
+            // Normalize username to lowercase for LDAP and database consistency
+            const normalizedUsername = username.toLowerCase();
+
             // Format: DOMAIN\username
-            const adUsername = ldapDomain ? `${ldapDomain}\\${username}` : username;
+            const adUsername = ldapDomain ? `${ldapDomain}\\${normalizedUsername}` : normalizedUsername;
 
             const config = {
                 url: ldapServer,
@@ -37,13 +40,11 @@ export function setupPassport(app: any) {
                     }
 
                     if (auth) {
-                        const lowerUser = username.toLowerCase();
-
                         // 1. Check if user exists in DB (Source of Truth)
                         let [user] = await db
                             .select()
                             .from(users)
-                            .where(eq(users.username, username))
+                            .where(eq(users.username, normalizedUsername))
                             .limit(1);
 
                         let role = "";
@@ -56,9 +57,9 @@ export function setupPassport(app: any) {
                             const admins = (process.env.USERS_ADMIN || "").split(",").map(u => u.trim().toLowerCase()).filter(u => u);
                             const maintenance = (process.env.USERS_MANUTENCAO || "").split(",").map(u => u.trim().toLowerCase()).filter(u => u);
 
-                            if (admins.includes(lowerUser)) {
+                            if (admins.includes(normalizedUsername)) {
                                 role = "admin";
-                            } else if (maintenance.includes(lowerUser)) {
+                            } else if (maintenance.includes(normalizedUsername)) {
                                 role = "manutencao";
                             } else {
                                 // Not in DB and not in Env whitelist -> Deny
@@ -69,7 +70,7 @@ export function setupPassport(app: any) {
                             [user] = await db
                                 .insert(users)
                                 .values({
-                                    username: username,
+                                    username: normalizedUsername,
                                     password: "LDAP_MANAGED",
                                     role: role,
                                 })

@@ -12,6 +12,7 @@ RUN apt-get update && \
     cron \
     libpq-dev \
     curl \
+    dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node dependencies
@@ -36,12 +37,15 @@ COPY . .
 
 # Setup entrypoint and cron job
 COPY cron_update_atas /etc/cron.d/cron_update_atas
-RUN chmod 0644 /etc/cron.d/cron_update_atas && \
+RUN dos2unix /etc/cron.d/cron_update_atas && \
+    chmod 0644 /etc/cron.d/cron_update_atas && \
     crontab /etc/cron.d/cron_update_atas && \
-    touch /var/log/cron_update_atas.log
+    touch /var/log/cron_update_atas.log && \
+    touch /var/log/cron_scrape_atas.log
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN dos2unix /usr/local/bin/entrypoint.sh && \
+    chmod +x /usr/local/bin/entrypoint.sh
 
 # Expose the internal port
 EXPOSE 5000

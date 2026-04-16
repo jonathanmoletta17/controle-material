@@ -69,6 +69,7 @@ const tipoLabels = {
   PEDIDO_PATRIMONIO: "Pedido (Patrimônio -> Manutenção)",
   ADIANTAMENTO_MANUTENCAO: "Adiantamento (Manutenção)",
   RETIRADA_CONSERVACAO: "Retirada (Conservação)",
+  RETIRADA_PALACIO_HORTENSIAS: "Retirada (Palácio das Hortênsias)",
 };
 
 interface MovementFormProps {
@@ -113,7 +114,7 @@ export function MovementForm({ itemId, onSubmit, isPending, onCancel }: Movement
   });
 
   const availableTipos = user?.role === "manutencao"
-    ? TIPOS_MOVIMENTO.filter(t => t === "RETIRADA_MANUTENCAO" || t === "RETORNO_MANUTENCAO" || t === "RETIRADA_CONSERVACAO")
+    ? TIPOS_MOVIMENTO.filter(t => t === "RETIRADA_MANUTENCAO" || t === "RETORNO_MANUTENCAO" || t === "RETIRADA_CONSERVACAO" || t === "RETIRADA_PALACIO_HORTENSIAS")
     : user?.role === "patrimonio"
       ? TIPOS_MOVIMENTO.filter(t => t === "ENTRADA_PATRIMONIO")
       : TIPOS_MOVIMENTO;
@@ -145,17 +146,24 @@ export function MovementForm({ itemId, onSubmit, isPending, onCancel }: Movement
         return;
       }
     }
+
+    if (data.tipo === "RETIRADA_PALACIO_HORTENSIAS") {
+      if (!data.responsavel) {
+        form.setError("responsavel", { message: "Responsavel e obrigatorio" });
+        return;
+      }
+    }
     onSubmit(data);
   };
 
   const tipoValue = form.watch("tipo");
   const requiresChamado = tipoValue === "RETIRADA_MANUTENCAO" || tipoValue === "RETORNO_MANUTENCAO";
-  const requiresResponsavel = requiresChamado || tipoValue === "RETIRADA_CONSERVACAO";
+  const requiresResponsavel = requiresChamado || tipoValue === "RETIRADA_CONSERVACAO" || tipoValue === "RETIRADA_PALACIO_HORTENSIAS";
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
           <FormField
             control={form.control}
             name="tipo"
@@ -196,6 +204,33 @@ export function MovementForm({ itemId, onSubmit, isPending, onCancel }: Movement
                     placeholder="0"
                     {...field}
                     data-testid="input-quantidade"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="dataReal"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Data da Movimentação *</FormLabel>
+                <FormControl>
+                  <Input
+                    type="date"
+                    {...field}
+                    value={field.value ? `${new Date(field.value).getFullYear()}-${String(new Date(field.value).getMonth() + 1).padStart(2, '0')}-${String(new Date(field.value).getDate()).padStart(2, '0')}` : ""}
+                    onChange={(e) => {
+                      if (!e.target.value) {
+                        field.onChange(null);
+                      } else {
+                        const [y, m, d] = e.target.value.split('-');
+                        field.onChange(new Date(Number(y), Number(m) - 1, Number(d), 12, 0, 0));
+                      }
+                    }}
+                    data-testid="input-movimento-data"
                   />
                 </FormControl>
                 <FormMessage />

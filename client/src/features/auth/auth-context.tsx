@@ -6,7 +6,7 @@ import { useLocation } from "wouter";
 type User = {
     id: string;
     username: string;
-    role: "admin" | "manutencao" | "patrimonio";
+    role: "admin" | "manutencao" | "patrimonio" | "visualizador";
 };
 
 type AuthContextType = {

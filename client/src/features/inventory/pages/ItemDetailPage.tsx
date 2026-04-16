@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
 import {
@@ -10,6 +10,9 @@ import {
   DollarSign,
   FileText,
   Archive,
+  ImageIcon,
+  Upload,
+  X,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -47,6 +50,7 @@ export default function ItemDetail() {
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isMovementDialogOpen, setIsMovementDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: item, isLoading: isLoadingItem } = useQuery<Item>({
     queryKey: ["/api/items", id],
@@ -98,6 +102,48 @@ export default function ItemDetail() {
         description: error.message,
         variant: "destructive",
       });
+    },
+  });
+
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch(`/api/items/${id}/image`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        try {
+          const json = JSON.parse(text);
+          throw new Error(json.error || json.message || "Falha ao enviar imagem");
+        } catch {
+          throw new Error(text || "Falha ao enviar imagem");
+        }
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/items", id] });
+      toast({ title: "Imagem atualizada com sucesso." });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Erro ao enviar imagem", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const removeImageMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("DELETE", `/api/items/${id}/image`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/items", id] });
+      toast({ title: "Imagem removida." });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Erro ao remover imagem", description: error.message, variant: "destructive" });
     },
   });
 
@@ -156,8 +202,15 @@ export default function ItemDetail() {
               <StatusBadge status={getDisplayStatus(item)} />
             </div>
             <p className="text-muted-foreground font-mono mt-1">
-              Codigo: {item.codigoGce}
+              {(!item.origemGce || item.origemGce === "GCE")
+                ? `GCE: ${item.codigoGce ?? "—"}`
+                : item.origemGce}
             </p>
+            {item.dataAtualizacao && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Atualizado em {format(new Date(item.dataAtualizacao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -171,13 +224,15 @@ export default function ItemDetail() {
               Editar
             </Button>
           )}
-          <Button
-            onClick={() => setIsMovementDialogOpen(true)}
-            data-testid="button-add-movement"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Movimentacao
-          </Button>
+          {user?.role !== "visualizador" && (
+            <Button
+              onClick={() => setIsMovementDialogOpen(true)}
+              data-testid="button-add-movement"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Movimentacao
+            </Button>
+          )}
         </div>
       </div>
 
@@ -208,6 +263,76 @@ export default function ItemDetail() {
             </CardContent>
           </Card>
 
+          {/* Imagem do Produto */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <ImageIcon className="h-5 w-5 text-primary" />
+                Imagem do Produto
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) uploadImageMutation.mutate(file);
+                  e.target.value = ""; // reset so same file can be re-uploaded
+                }}
+              />
+              {item.imagemUrl ? (
+                <div className="space-y-3">
+                  <img
+                    src={item.imagemUrl}
+                    alt={item.itemNome}
+                    className="w-full max-h-64 object-contain rounded-md border"
+                  />
+                  {user?.role === "admin" && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadImageMutation.isPending}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Trocar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeImageMutation.mutate()}
+                        disabled={removeImageMutation.isPending}
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Remover
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed rounded-md">
+                  <ImageIcon className="h-12 w-12 text-muted-foreground mb-3" />
+                  <p className="text-sm text-muted-foreground mb-3">Sem imagem cadastrada</p>
+                  {user?.role === "admin" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadImageMutation.isPending}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploadImageMutation.isPending ? "Enviando..." : "Adicionar Imagem"}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -218,6 +343,10 @@ export default function ItemDetail() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
+                  <div>
+                    <span className="text-sm text-muted-foreground">Status do Estoque</span>
+                    <p className="font-medium mt-1">{item.statusEstoque || "Nao definido"}</p>
+                  </div>
                   <div>
                     <span className="text-sm text-muted-foreground flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
@@ -233,6 +362,17 @@ export default function ItemDetail() {
                     <span className="text-sm text-muted-foreground">ATA</span>
                     <p className="font-medium mt-1">{item.ata || "Nao definido"}</p>
                   </div>
+                  <div>
+                    <span className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Validade da ATA
+                    </span>
+                    <p className="font-medium mt-1">
+                      {item.validadeAta
+                        ? format(new Date(item.validadeAta), "dd/MM/yyyy", { locale: ptBR })
+                        : "Nao definida"}
+                    </p>
+                  </div>
                 </div>
                 <div className="space-y-4">
                   <div>
@@ -245,14 +385,9 @@ export default function ItemDetail() {
                     </div>
                   </div>
                   <div>
-                    <span className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Ultima Atualizacao
-                    </span>
+                    <span className="text-sm text-muted-foreground">Status</span>
                     <p className="font-medium mt-1">
-                      {item.dataAtualizacao
-                        ? format(new Date(item.dataAtualizacao), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
-                        : "Nao registrada"}
+                      {item.ativo ? "Ativo" : "Inativo"}
                     </p>
                   </div>
                 </div>

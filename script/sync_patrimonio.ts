@@ -14,12 +14,12 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes("@db:5432")) {
     process.env.DATABASE_URL = process.env.DATABASE_URL.replace("@db:5432", "@localhost:5434");
 }
 
-const FILE_PATH = path.join(process.cwd(), 'attached_assets', 'estoque_patrimonio.xls');
+const FILE_PATH = path.join(process.cwd(), 'attached_assets', 'estoque_patrimonio.xls.xls');
 
 async function syncPatrimonio() {
     // Dynamic import to ensure env vars are set first
-    const { db } = await import('../server/db');
-    const { items, movimentos } = await import('../shared/schema');
+    const { db } = await import('../server/db.js');
+    const { items, movimentos } = await import('../shared/schema.js');
     const { eq } = await import('drizzle-orm');
 
     console.log(`Starting sync from file: ${FILE_PATH}`);
@@ -34,8 +34,8 @@ async function syncPatrimonio() {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
 
-        // Convert to JSON (Header is on line 5 => index 4)
-        const data = XLSX.utils.sheet_to_json(worksheet, { range: 4 });
+        // Convert to JSON (Header is on line 1 => index 0)
+        const data = XLSX.utils.sheet_to_json(worksheet) as any[];
 
         console.log(`Found ${data.length} rows in sheet "${sheetName}".`);
 
@@ -44,39 +44,31 @@ async function syncPatrimonio() {
             process.exit(0);
         }
 
-        // User said lines 6 and 7 should be ignored.
-        // range: 4 means Header is Line 5.
-        // data[0] is Line 6.
-        // data[1] is Line 7.
-        // So we start processing from data[2].
+        // Data starts from index 0 (all rows after header)
+        const sampleRow = data[0] as any;
+        console.log("Sample row keys:", Object.keys(sampleRow));
 
-        if (data.length < 3) {
-            console.warn("Not enough data rows (expecting at least 3 to skip garbage lines).");
-            process.exit(0);
-        }
-
-        // Use a valid row to detect headers? Or just iterate and try to find keys.
-        // Let's inspect data[2] (Line 8) to see keys.
-        const sampleRow = data[2] as any;
-        console.log("Sample row (Line 8) keys:", Object.keys(sampleRow));
-
-        // Find the specific keys using fuzzy match if needed, or strict.
-        // "Item Material" and "Saldo Físico"
+        // Find the specific keys using fuzzy match
+        // "Item Material", "Saldo Físico", and "Nome"
         let keyItem = "Item Material";
         let keySaldo = "Saldo Físico";
+        let keyNome = "Nome";
 
         // Try to find actual keys in sampleRow that match
         const keys = Object.keys(sampleRow);
-        const foundItem = keys.find(k => k.toLowerCase().includes("item material"));
+        const foundItem = keys.find(k => k.toLowerCase().includes("item material") || k.toLowerCase().includes("item"));
         const foundSaldo = keys.find(k => k.toLowerCase().includes("saldo") && k.toLowerCase().includes("sico")); // avoid encoding issues
+        const foundNome = keys.find(k => k.toLowerCase().includes("nome"));
 
         if (foundItem) keyItem = foundItem;
         if (foundSaldo) keySaldo = foundSaldo;
+        if (foundNome) keyNome = foundNome;
 
-        console.log(`Using keys: Item="${keyItem}", Saldo="${keySaldo}"`);
+        console.log(`Using keys: Item="${keyItem}", Saldo="${keySaldo}", Nome="${keyNome}"`);
 
-        const validData = data.slice(2);
+        const validData = data;
         let updatedCount = 0;
+        let createdCount = 0;
         let skippedCount = 0;
         let errorsCount = 0;
         let orphansCount = 0;
@@ -99,6 +91,7 @@ async function syncPatrimonio() {
         // 2. Process Excel Data
         for (const row of validData as any[]) {
             const codigoGce = String(row[keyItem] || "").trim();
+            const itemNome = String(row[keyNome] || "").trim();
             const saldoFisicoRaw = row[keySaldo];
 
             let saldoFisico = 0;
@@ -118,6 +111,7 @@ async function syncPatrimonio() {
             const item = dbItemsMap.get(codigoGce);
 
             if (item) {
+                // ITEM EXISTS: Update stock
                 touchedItemIds.add(item.id);
 
                 const currentStock = item.patrimonioAtual || 0;
@@ -143,7 +137,44 @@ async function syncPatrimonio() {
                     updatedCount++;
                 }
             } else {
-                skippedCount++;
+                // ITEM DOES NOT EXIST: Create new item
+                if (newStock > 0) {
+                    try {
+                        // Insert new item
+                        const newItem = await db.insert(items).values({
+                            setor: "UNIFICADO",
+                            codigoGce: codigoGce,
+                            itemNome: itemNome || codigoGce, // Use Excel name, fallback to GCE code
+                            estoqueMinimo: 0,
+                            estoqueAtual: 0,
+                            patrimonioAtual: newStock,
+                            ativo: true,
+                        }).returning();
+
+                        const createdItemId = newItem[0]?.id;
+                        if (createdItemId) {
+                            touchedItemIds.add(createdItemId);
+
+                            // Create initial ENTRADA_PATRIMONIO movement
+                            await db.insert(movimentos).values({
+                                itemId: createdItemId,
+                                tipo: "ENTRADA_PATRIMONIO",
+                                quantidade: newStock,
+                                observacoes: "Criação automática via sync excel - Entrada inicial do patrimônio",
+                                dataMovimento: new Date(),
+                                responsavel: "Sistema (Sync)",
+                            });
+
+                            console.log(`[Item ${codigoGce}] Created new item with ${newStock} units`);
+                            createdCount++;
+                        }
+                    } catch (error: any) {
+                        console.error(`[Item ${codigoGce}] Error creating item: ${error.message}`);
+                        errorsCount++;
+                    }
+                } else {
+                    skippedCount++;
+                }
             }
         }
 
@@ -179,9 +210,10 @@ async function syncPatrimonio() {
 
         console.log("------------------------------------------------");
         console.log(`Sync Completed.`);
+        console.log(`Created Items (New from Excel): ${createdCount}`);
         console.log(`Updated Items (Excel Match): ${updatedCount}`);
         console.log(`Orphaned Items Zeroed: ${orphansCount}`);
-        console.log(`Skipped in Excel (Not in DB): ${skippedCount}`);
+        console.log(`Skipped in Excel (No stock): ${skippedCount}`);
         console.log(`Errors: ${errorsCount}`);
 
     } catch (error) {

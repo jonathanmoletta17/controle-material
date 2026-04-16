@@ -11,6 +11,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import type { Item } from "@shared/schema";
+import { ORIGENS_GCE_LABEL } from "@shared/schema";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { getItemAlerts } from "@/features/inventory/utils/alerts";
 
@@ -107,7 +108,10 @@ export function ItemsTable({ items, isLoading, onEdit, onDelete }: ItemsTablePro
                 data-testid={`row-item-${item.id}`}
               >
                 <TableCell className="font-mono text-sm">
-                  {item.codigoGce}
+                  {(!item.origemGce || item.origemGce === "GCE")
+                    ? (item.codigoGce ?? "—")
+                    : <span className="text-muted-foreground text-xs not-italic font-sans">{ORIGENS_GCE_LABEL[item.origemGce as keyof typeof ORIGENS_GCE_LABEL] ?? item.origemGce}</span>
+                  }
                 </TableCell>
                 <TableCell className="font-medium">
                   {item.itemNome}

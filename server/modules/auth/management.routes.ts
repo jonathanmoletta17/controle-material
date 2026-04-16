@@ -20,7 +20,7 @@ router.get("/users", requireAdmin, async (req: Request, res: Response) => {
 
 const createUserSchema = z.object({
     username: z.string().min(1),
-    role: z.enum(["admin", "manutencao"]),
+    role: z.enum(["admin", "manutencao", "patrimonio", "visualizador"]),
 });
 
 router.post("/users", requireAdmin, async (req: Request, res: Response) => {
@@ -30,16 +30,19 @@ router.post("/users", requireAdmin, async (req: Request, res: Response) => {
             return res.status(400).json({ error: "Dados inválidos", details: parsed.error });
         }
 
+        // Normalize username to lowercase for consistency
+        const normalizedUsername = parsed.data.username.toLowerCase();
+
         // Check if user exists
-        const existing = await authService.getUserByUsername(parsed.data.username);
+        const existing = await authService.getUserByUsername(normalizedUsername);
         if (existing) {
             return res.status(409).json({ error: "Usuário já existe" });
         }
 
         const user = await authService.createUser({
-            username: parsed.data.username,
+            username: normalizedUsername,
             role: parsed.data.role,
-            password: "LDAP_MANAGED" // Placeholder 
+            password: "LDAP_MANAGED" // Placeholder
         });
 
         res.status(201).json(user);
@@ -52,7 +55,7 @@ router.post("/users", requireAdmin, async (req: Request, res: Response) => {
 router.patch("/users/:id/role", requireAdmin, async (req: Request, res: Response) => {
     try {
         const { role } = req.body;
-        if (!["admin", "manutencao"].includes(role)) {
+        if (!["admin", "manutencao", "patrimonio", "visualizador"].includes(role)) {
             return res.status(400).json({ error: "Role inválido" });
         }
 

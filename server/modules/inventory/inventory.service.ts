@@ -86,7 +86,7 @@ class InventoryService {
 
   async getItemByCodigo(codigo: string): Promise<Item | undefined> {
     const [item] = await db.select().from(items).where(eq(items.codigoGce, codigo));
-    return item || undefined;
+    return item ?? undefined;
   }
 
   async createItem(insertItem: InsertItem): Promise<Item> {
@@ -95,8 +95,8 @@ class InventoryService {
     if ((insertItem.estoqueMinimo || 0) < 0) throw new Error("Estoque Mínimo não pode ser negativo");
     if ((insertItem.patrimonioAtual || 0) < 0) throw new Error("Patrimônio Atual não pode ser negativo");
 
-    // 2. Uniqueness: Codigo GCE (unless ADIANTAMENTO)
-    if (insertItem.codigoGce.toUpperCase() !== "ADIANTAMENTO") {
+    // 2. Uniqueness: Codigo GCE (somente quando origem é GCE e o código foi informado)
+    if (insertItem.origemGce === "GCE" && insertItem.codigoGce) {
       const existingGce = await db.select().from(items).where(eq(items.codigoGce, insertItem.codigoGce)).limit(1);
       if (existingGce.length > 0) {
         throw new Error(`Já existe um item com o Código GCE: ${insertItem.codigoGce}`);
@@ -194,6 +194,16 @@ class InventoryService {
 
       case "RETIRADA_CONSERVACAO":
         // Saída do estoque para conservação
+        requireField(insertMovimento.responsavel, "Responsável");
+
+        if (item.estoqueAtual < Math.abs(insertMovimento.quantidade)) {
+          throw new Error(`Estoque de Manutenção insuficiente (${item.estoqueAtual}) para esta retirada.`);
+        }
+        quantidadeAlteracaoEstoque = -Math.abs(insertMovimento.quantidade);
+        break;
+
+      case "RETIRADA_PALACIO_HORTENSIAS":
+        // Retirada para Palácio das Hortênsias
         requireField(insertMovimento.responsavel, "Responsável");
 
         if (item.estoqueAtual < Math.abs(insertMovimento.quantidade)) {

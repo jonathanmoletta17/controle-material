@@ -1,2 +1,9 @@
-# Executa o script de atualização de atas todo domingo à meia-noite
-0 0 * * 0 /opt/venv/bin/python3 /app/update_atas.py >> /var/log/cron_update_atas.log 2>&1
+PATH=/opt/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+SHELL=/bin/bash
+
+# Executa o script de atualização de atas todo Segunda às 08:00
+0 8 * * 1 cd /app && /opt/venv/bin/python3 /app/update_atas.py >> /var/log/cron_update_atas.log 2>&1
+
+# Executa o script de captura de término de vigência de atas toda Segunda às 10:00
+0 10 * * 1 cd /app && /opt/venv/bin/python3 /app/scrape_atas_vigentes.py >> /var/log/cron_scrape_atas.log 2>&1
+

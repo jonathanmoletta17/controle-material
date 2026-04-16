@@ -25,7 +25,10 @@ export default function LoginPage() {
     });
 
     function onSubmit(data: any) {
-        loginMutation.mutate(data);
+        loginMutation.mutate({
+            ...data,
+            username: data.username.toLowerCase()
+        });
     }
 
     return (

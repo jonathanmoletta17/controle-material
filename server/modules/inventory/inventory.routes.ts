@@ -1,6 +1,38 @@
 import { Router, Request, Response } from "express";
 import { inventoryService } from "./inventory.service";
 import { insertItemSchema, insertMovimentoSchema } from "@shared/schema";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
+
+const UPLOADS_DIR = path.resolve("uploads/items");
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    cb(null, UPLOADS_DIR);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    cb(null, `${unique}${ext}`);
+  },
+});
+
+const imageFilter: multer.Options["fileFilter"] = (_req, file, cb) => {
+  const allowed = ["image/jpeg", "image/png", "image/webp"];
+  if (allowed.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Tipo de arquivo não permitido. Use JPEG, PNG ou WEBP."));
+  }
+};
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: imageFilter,
+});
 
 const router = Router();
 
@@ -80,6 +112,67 @@ router.delete("/items/:id", requireAdmin, async (req: Request, res: Response) =>
   }
 });
 
+router.post(
+  "/items/:id/image",
+  requireAdmin,
+  upload.single("image"),
+  async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Nenhum arquivo enviado." });
+      }
+
+      // If there is an existing image, delete the old file
+      const existing = await inventoryService.getItem(req.params.id);
+      if (!existing) {
+        fs.unlinkSync(req.file.path); // clean up newly uploaded file
+        return res.status(404).json({ error: "Item not found" });
+      }
+      if (existing.imagemUrl) {
+        const oldPath = path.resolve(existing.imagemUrl.replace(/^\//, ""));
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
+      }
+
+      const imagemUrl = `/uploads/items/${req.file.filename}`;
+      const item = await inventoryService.updateItem(req.params.id, { imagemUrl } as any);
+      res.json(item);
+    } catch (error: any) {
+      // Multer errors (file size, wrong type)
+      if (error.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ error: "Arquivo muito grande. Máximo 5MB." });
+      }
+      console.error("Error uploading image:", error);
+      res.status(500).json({ error: error.message || "Failed to upload image" });
+    }
+  }
+);
+
+router.delete(
+  "/items/:id/image",
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const existing = await inventoryService.getItem(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ error: "Item not found" });
+      }
+      if (existing.imagemUrl) {
+        const filePath = path.resolve(existing.imagemUrl.replace(/^\//, ""));
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+      const item = await inventoryService.updateItem(req.params.id, { imagemUrl: null } as any);
+      res.json(item);
+    } catch (error) {
+      console.error("Error removing image:", error);
+      res.status(500).json({ error: "Failed to remove image" });
+    }
+  }
+);
+
 router.get("/items/:id/movements", async (req: Request, res: Response) => {
   try {
     const movimentos = await inventoryService.getMovimentos(req.params.id);
@@ -96,6 +189,10 @@ router.post("/items/:id/movements", async (req: Request, res: Response) => {
     const role = user?.role || "manutencao";
 
     // RBAC for Movement Type
+    if (role === "visualizador") {
+      return res.status(403).json({ error: "Seu perfil é apenas de visualização. Não é permitido registrar movimentações." });
+    }
+
     const restrictedTypes = ["ENTRADA_PATRIMONIO", "PEDIDO_PATRIMONIO", "ADIANTAMENTO_MANUTENCAO"];
     if (role === "manutencao" && restrictedTypes.includes(req.body.tipo)) {
       return res.status(403).json({ error: "Seu perfil não permite este tipo de movimentação." });

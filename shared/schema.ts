@@ -5,6 +5,26 @@ import { z } from "zod";
 import { relations } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
+export const ORIGENS_GCE = [
+  "GCE",
+  "ADIANTAMENTO",
+  "DESCONTINUADO",
+  "EMPRESTIMO",
+  "ARQUITETURA",
+  "USADOS",
+] as const;
+
+export type OrigemGce = typeof ORIGENS_GCE[number];
+
+export const ORIGENS_GCE_LABEL: Record<OrigemGce, string> = {
+  GCE: "Código GCE",
+  ADIANTAMENTO: "Adiantamento",
+  DESCONTINUADO: "Descontinuado",
+  EMPRESTIMO: "Empréstimo",
+  ARQUITETURA: "Adquirida pelo Núcleo de Arquitetura",
+  USADOS: "Usados",
+};
+
 export const SETORES = [
   "ELETRICA",
   "MARCENARIA",
@@ -30,7 +50,8 @@ export const TIPOS_MOVIMENTO = [
   "ENTRADA_PATRIMONIO", // Entrada nova no patrimônio
   "PEDIDO_PATRIMONIO", // Transferência Patrimônio -> Estoque Manutenção
   "ADIANTAMENTO_MANUTENCAO", // Entrada direta no estoque manutenção
-  "RETIRADA_CONSERVACAO" // Retirada pela equipe de conservação
+  "RETIRADA_CONSERVACAO", // Retirada pela equipe de conservação
+  "RETIRADA_PALACIO_HORTENSIAS" // Retirada para Palácio das Hortênsias
 ] as const;
 
 export type TipoMovimento = typeof TIPOS_MOVIMENTO[number];
@@ -38,7 +59,8 @@ export type TipoMovimento = typeof TIPOS_MOVIMENTO[number];
 export const items = pgTable("items", {
   id: text("id").primaryKey().$defaultFn(() => uuidv4()),
   setor: text("setor").notNull(),
-  codigoGce: text("codigo_gce").notNull(),
+  codigoGce: text("codigo_gce"),
+  origemGce: text("origem_gce").notNull().default("GCE"),
   itemNome: text("item_nome").notNull(),
   estoqueMinimo: integer("estoque_minimo").notNull().default(0),
   estoqueAtual: integer("estoque_atual").notNull().default(0),
@@ -49,6 +71,7 @@ export const items = pgTable("items", {
   validadeAta: timestamp("validade_ata"),
   dataAtualizacao: timestamp("data_atualizacao"),
   observacoes: text("observacoes"),
+  imagemUrl: text("imagem_url"),
   ativo: boolean("ativo").notNull().default(true),
 });
 

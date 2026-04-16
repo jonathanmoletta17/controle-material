@@ -5,6 +5,7 @@ import { Button } from "@/shared/components/ui/button";
 import { StatusBadge } from "@/features/inventory/components/status-badge";
 import { AlertTriangle, ArrowRight, CalendarClock, AlertOctagon } from "lucide-react";
 import type { Item } from "@shared/schema";
+import { ORIGENS_GCE_LABEL } from "@shared/schema";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Badge } from "@/shared/components/ui/badge";
 
@@ -91,7 +92,9 @@ export function AlertsList({ items, isLoading, maxItems = 10 }: AlertsListProps)
               <div className="flex flex-col min-w-0 flex-1 gap-1">
                 <span className="font-medium text-sm truncate">{item.itemNome}</span>
                 <span className="text-xs text-muted-foreground font-mono">
-                  {item.codigoGce}
+                  {(!item.origemGce || item.origemGce === "GCE")
+                    ? (item.codigoGce ?? "—")
+                    : ORIGENS_GCE_LABEL[item.origemGce as keyof typeof ORIGENS_GCE_LABEL] ?? item.origemGce}
                 </span>
 
                 {/* Alert Badges */}

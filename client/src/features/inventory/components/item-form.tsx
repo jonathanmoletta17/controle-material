@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
-import { SETORES, insertItemSchema, type Item } from "@shared/schema";
+import { SETORES, ORIGENS_GCE, ORIGENS_GCE_LABEL, insertItemSchema, type Item } from "@shared/schema";
 import { Loader2 } from "lucide-react";
 
 const formSchema = insertItemSchema.extend({
@@ -30,6 +30,8 @@ const formSchema = insertItemSchema.extend({
   patrimonioAtual: z.coerce.number().min(0),
   validadeValorReferencia: z.coerce.date().nullable().optional(),
   validadeAta: z.coerce.date().nullable().optional(),
+  origemGce: z.enum(ORIGENS_GCE).default("GCE"),
+  codigoGce: z.string().nullable().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -46,6 +48,7 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
     resolver: zodResolver(formSchema),
     defaultValues: {
       setor: "UNIFICADO",
+      origemGce: (item?.origemGce as typeof ORIGENS_GCE[number]) || "GCE",
       codigoGce: item?.codigoGce || "",
       itemNome: item?.itemNome || "",
       estoqueMinimo: item?.estoqueMinimo || 0,
@@ -60,8 +63,14 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
   });
 
   const handleSubmit = (data: FormValues) => {
+    // Limpa o código GCE se a origem não for GCE
+    if (data.origemGce !== "GCE") {
+      data.codigoGce = null;
+    }
     onSubmit(data);
   };
+
+  const origemAtual = form.watch("origemGce");
 
   return (
     <Form {...form}>
@@ -69,39 +78,60 @@ export function ItemForm({ item, onSubmit, isPending, onCancel }: ItemFormProps)
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
-            name="codigoGce"
+            name="origemGce"
             render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Codigo GCE *</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Ex: 1234.5678.123456"
-                    {...field}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      // Se conter letras, retorna o valor original (permite ADIANTAMENTO)
-                      if (/[a-zA-Z]/.test(value)) {
-                        field.onChange(value);
-                        return;
-                      }
-
-                      // Remove tudo que não é dígito e aplica a máscara
-                      const formatted = value
-                        .replace(/\D/g, "")
-                        .replace(/^(\d{4})(\d)/, "$1.$2")
-                        .replace(/^(\d{4})\.(\d{4})(\d)/, "$1.$2.$3")
-                        .slice(0, 16); // 14 dígitos + 2 pontos
-
-                      field.onChange(formatted);
-                    }}
-                    data-testid="input-codigo-gce"
-                  />
-                </FormControl>
-                <FormDescription>Codigo unico do item no GCE</FormDescription>
+              <FormItem>
+                <FormLabel>Origem / Tipo de Aquisição *</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-origem-gce">
+                      <SelectValue placeholder="Selecione a origem" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {ORIGENS_GCE.map((origem) => (
+                      <SelectItem key={origem} value={origem}>
+                        {ORIGENS_GCE_LABEL[origem]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>Como este item foi adquirido ou classificado</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
+
+          {origemAtual === "GCE" && (
+            <FormField
+              control={form.control}
+              name="codigoGce"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Código GCE *</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Ex: 1234.5678.123456"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const formatted = value
+                          .replace(/\D/g, "")
+                          .replace(/^(\d{4})(\d)/, "$1.$2")
+                          .replace(/^(\d{4})\.(\d{4})(\d)/, "$1.$2.$3")
+                          .slice(0, 16);
+                        field.onChange(formatted);
+                      }}
+                      data-testid="input-codigo-gce"
+                    />
+                  </FormControl>
+                  <FormDescription>Código único do item no GCE</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
 
         <FormField

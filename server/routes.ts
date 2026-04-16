@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { type Server } from "http";
+import express from "express";
+import path from "path";
 import { inventoryRoutes } from "./modules/inventory/inventory.routes";
 import { importRoutes } from "./modules/import/import.routes";
 import { authRoutes } from "./modules/auth/auth.routes";
@@ -12,6 +14,9 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
+  // Serve static uploaded files
+  app.use("/uploads", express.static(path.resolve("uploads")));
+
   // Mount modular routes
   app.use("/api", inventoryRoutes);
   app.use("/api/import", importRoutes);
@@ -19,10 +24,6 @@ export async function registerRoutes(
   app.use("/api/management", managementRoutes);
   app.use("/api/glpi", glpiRoutes);
   app.use("/api/responsaveis", responsaveisRoutes);
-  app.use("/api", importRoutes);
-  app.use("/api", authRoutes);
-  app.use("/api", managementRoutes);
-  app.use("/api/glpi", glpiRoutes);
 
 
   return httpServer;

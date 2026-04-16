@@ -13,13 +13,13 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes("@db:5432")) {
     process.env.DATABASE_URL = process.env.DATABASE_URL.replace("@db:5432", "@localhost:5434");
 }
 
-const INPUT_FILE = path.join(process.cwd(), 'attached_assets', 'estoque_patrimonio.xls');
+const INPUT_FILE = path.join(process.cwd(), 'attached_assets', 'estoque_patrimonio.xls.xls');
 const OUTPUT_FILE = path.join(process.cwd(), 'audit_orphans.xlsx');
 
 async function auditPatrimonio() {
     // Dynamic import
-    const { db } = await import('../server/db');
-    const { items } = await import('../shared/schema');
+    const { db } = await import('../server/db.js');
+    const { items } = await import('../shared/schema.js');
 
     console.log(`Starting Audit...`);
     console.log(`Input: ${INPUT_FILE}`);
@@ -35,20 +35,20 @@ async function auditPatrimonio() {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
 
-        // Header Line 5 (index 4), skip lines 6, 7 (index 5, 6). Start data at index 7.
-        const data = XLSX.utils.sheet_to_json(worksheet, { range: 4 });
+        // Header on line 1 (index 0). Data starts from index 0.
+        const data = XLSX.utils.sheet_to_json(worksheet) as any[];
 
-        if (data.length < 3) {
-            console.error("Not enough data rows in Excel.");
+        if (data.length === 0) {
+            console.error("Sheet is empty.");
             process.exit(1);
         }
 
         // Logic from sync_patrimonio.ts
-        const sampleRow = data[2] as any;
+        const sampleRow = data[0] as any;
         const keys = Object.keys(sampleRow);
-        const foundItemKey = keys.find(k => k.toLowerCase().includes("item material")) || "Item Material"; // Fallback matching logic
+        const foundItemKey = keys.find(k => k.toLowerCase().includes("item material") || k.toLowerCase().includes("item")) || "Item Material"; // Fallback matching logic
 
-        const validData = data.slice(2);
+        const validData = data;
         const excelGceSet = new Set<string>();
 
         for (const row of validData as any[]) {

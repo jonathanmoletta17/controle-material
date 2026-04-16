@@ -1,0 +1,325 @@
+<!DOCTYPE html><html class=" js no-flexbox flexbox-legacy canvas canvastext webgl no-touch geolocation postmessage no-websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers no-applicationcache svg inlinesvg smil svgclippaths"><head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="shortcut icon" href="/Atas/Content/Themes/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/Atas/Content/Themes/images/favicon.ico" type="image/x-icon">
+
+    <title>GCE - Todos os Itens em Ata Vigente</title>
+
+    <link href="/Atas/Content/css?v=-QLcf5XWnCgNUvw3sRRAEUFP3VRrkk18YJGFFXr6Ilo1" rel="stylesheet">
+
+    <link href="/Atas/Content/themes/base/datepicker?v=6_xZkQVHu-xqE0L7z-AMge3ORsld-FCChoF7AKUPeUA1" rel="stylesheet">
+
+    <link href="/Atas/Content/formularios.css" rel="stylesheet" type="text/css">
+    <link href="/Atas/Content/abas.css" rel="stylesheet" type="text/css">
+    <link href="/Atas/Content/alertas_carregando.css" rel="stylesheet" type="text/css">
+    <link href="/Atas/Content/Themes/base/jquery.dataTables.css" rel="stylesheet" type="text/css">
+
+    <!--[if IE 8]>
+    <script src="/Atas/bundles/abasIE8"></script>
+
+    <![endif]-->
+    <script src="/Atas/bundles/modernizr?v=_crq2QUT7I_NAMAaEv7T-Hgr0jkqYYHmaNBKKo2em_Q1"></script>
+
+    <script src="/Atas/bundles/jquery?v=2AlxdAYRlyg_4qrIwaOxfz6Y81AbcAqGH-bMVM7WxRg1"></script>
+
+    <script src="/Atas/bundles/jqueryui?v=oRyxv3WXbCWa2syYqPtNYc3CxaujfGXMmRJwa5EtbYg1"></script>
+
+    <script src="/Atas/bundles/datatables?v=4AXnei4a3WQ-Xobqfp4a0DnOaYhVaj-yxn_GvqtLNVw1"></script>
+
+    <script src="/Atas/bundles/vue?v=3G3OTrEOMYlhsuLT0r2KajImDsSIxU6sIL27RkA0AfY1"></script>
+
+    
+
+
+    <script type="text/javascript" src="/Atas/Scripts/Home/Modulos.js"></script>
+    <script type="text/javascript" src="/Atas/Scripts/jquery.easyui.min.js"></script>
+    <script src="/Atas/Scripts/Lib/GerenciamentoModal.js"></script>
+    <script src="/Atas/Scripts/Lib/jquery.hotkeys.js"></script>
+
+    <!--[if IE 8]>
+    <script src="/Atas/bundles/utilIE8"></script>
+
+    <![endif]-->
+    <!--[if IE 9]>
+    <script src="/Atas/bundles/utilIE8"></script>
+
+    <![endif]-->
+    <script src="/Atas/bundles/util?v=8ZgURqPDadYJO_nDv_YXkc7O5U1wyWYqHPvOO8gxgQE1"></script>
+
+
+    <!-- jQGrid -->
+    <link href="/Atas/Content/Themes/base/jqgrid.ui.css" rel="stylesheet" type="text/css">
+    <script src="/Atas/Scripts/Lib/jquery.jqGrid.js"></script>
+    <script src="/Atas/Scripts/Lib/jqGrid.locale-pt-br.js"></script>
+
+    <script type="text/javascript">
+        function preventBack() { window.history.forward(); }
+        setTimeout("preventBack()", 0);
+        window.onload = function () {
+            window.history.forward(0);
+
+            var compativel = verificarBrowserCompativel();
+
+            if (!compativel) {
+                $(".spnAmbiente").text($(".spnAmbiente").text() + " - NAVEGADOR INCOMPATÍVEL");
+            }
+        };
+        window.onunload = function () { return null; };
+    </script>
+
+    
+</head>
+<body>
+    <input id="baseUrl" name="baseUrl" type="hidden" value="/Atas/" data-original-title="" title="" style="">
+    <div title="Centralizar Modais" id="btn-center-dialog"></div>
+    
+
+    <!-- CABEÇALHO, LOGO, TÍTULO SISTEMA-->
+    <div class="header">
+        <div class="logoTituloCab">
+            <label>GCE - Gestão de Compras do Estado</label>
+        </div>
+        <div class="moduloHeader">
+            <label>Atas de Registro de Preços</label>
+            <span class="spnAmbiente">Ambiente de Produção</span>
+        </div>
+        <div class="imgHeader"></div>
+        <div class="barraUsuario">
+                    <label class="lbl_usr" data-original-title="Usuário do Sistema" title="Unidade de Compra - USUÁRIO CONSULTA - CC - CC - CASA CIVIL
+Unidade Consumidora - AUTORIZADOR N1 - CC - CC - CASA CIVIL
+Unidade Central Compra - HOMOLOGADOR - CC - CC - CASA CIVIL
+Unidade Central Compra - PRÉ-HOMOLOGADOR - CC - CC - CASA CIVIL
+Unidade Central Compra - AUTORIZADOR N1 - CC - CC - CASA CIVIL
+Unidade de Solicitação de Catalogação - SOLICITANTE - CC - CC - CASA CIVIL
+Unidade de Solicitação de Catalogação - ORDENADOR - CC - CC - CASA CIVIL
+Unidade de Solicitação de Catalogação - SOLICITANTE DE PESQUISA - CC - CC - CASA CIVIL
+Unidade de Solicitação de Acesso - GESTOR LOCAL - CC - CC - CASA CIVIL
+">
+João Pedro Wilson Dias                    </label>
+                <ul class="chat-options">
+                    <li class="ntf">
+                        <input id="btnNtf" type="button" value="" data-original-title="" title="" style="">
+                    </li>
+                    <li class="msg">
+                        <input id="btnMsg" type="button" value="" data-original-title="" title="" style="">
+                    </li>
+                    <li class="cfg">
+                        <input id="btnCfg" type="button" value="" data-original-title="" title="" style="">
+                    </li>
+                </ul>
+                    <img class="img_usr online" title="Online" src="/Atas/content/themes/images/img_usr.png" alt="Usuário">
+
+        </div>
+    </div>
+    <!-- MENU-->
+    <div class="menuDiv"><div class="bar"></div>
+        <ul class="modern-menu ico">
+<li><a href="#" class="sub-menu down"><span>Gestão de Atas de Registro de Preços</span></a><ul><li><a href="/Atas/LiberacaoPrevisao/Listar"><span>Liberações de Previsão</span></a></li><li><a href="/Atas/NegativaParticipacao/Listar"><span>Negativa de Participação</span></a></li><li class="separador"><a href="/Atas/AtaRegistroPreco/Listar"><span>Atas de Registro de Preços</span></a></li><li><a href="/Atas/SolicitacaoAdesao/Listar"><span>Solicitação de Adesão Externa</span></a></li><li><a href="#"><span style="color: rgb(184, 184, 184);">Solicitação de Adesão a ARP Externa</span></a></li><li><a href="/Atas/SolicitacaoInclusao/Listar"><span>Solicitação de Adesão Interna</span></a></li><li><a href="/Atas/ModeloRelatorioAta/Listar"><span>Modelo de Relatório da Ata</span></a></li><li><a href="/Atas/AditivoAta/Listar"><span>Aditivos de Atas</span></a></li><li><a href="/Atas/IndexacaoAtas/Listar"><span>Indexação Atas</span></a></li></ul></li><li><a href="#" class="sub-menu down"><span>Consultas</span></a><ul><li><a href="/Atas/ItemAta/ListarTodosItensAtaVigente"><span>Consulta de Itens em Ata Vigente</span></a></li><li><a href="/Atas/ItemLiberado/ListarItensLiberadosPrevisaoPreco"><span>Consulta de Itens Liberados para Previsão de Registro de Preço</span></a></li><li><a href="/Atas/Consultas/TodasAtasRegistroPreco"><span>Consulta de Todas as Atas de Registro de Preço</span></a></li><li><a href="/Atas/Consultas/TodasAtasRegistroPrecoPNCP"><span>Consulta de Todas as Atas de Registro de Preço PNCP</span></a></li><li><a href="/Atas/Consultas/TodasLiberacoesPrevisao"><span>Consulta de Todas as Liberações de Previsão</span></a></li><li><a href="/Atas/Importacao/ListarAta"><span>Atas LIC</span></a></li><li><a href="#" class="sub-menu"><span>Consultar Impedimento de Fornecedor</span></a><ul><li><a href="/Atas/Integracoes/ConsultarCadinMenu"><span>Cadastro Informativo - CADIN</span></a></li><li><a href="/Atas/Integracoes/ConsultarCfilMenu"><span>Cadastro de Fornecedores Impedidos de Licitar - CFIL</span></a></li><li><a href="/Atas/Integracoes/ConsultarCeisMenu"><span>Cadastro de Empresas Inidôneas e Suspensas - CEIS</span></a></li><li><a href="/Atas/Integracoes/ConsultarCnepMenu"><span>Cadastro Nacional de Empresas Punidas - CNEP</span></a></li><li><a href="/Atas/Integracoes/ConsultarCadinCfilCeisCnepMenu"><span>Consulta CADIN, CFIL, CEIS e CNEP</span></a></li></ul></li></ul></li><li><a href="#" class="sub-menu down"><span>Utilitários</span></a><ul><li><a href="/Atas/CaixaEntrada/Listar"><span>Caixa de Entrada</span></a></li><li><a href="/Atas/Sistema/Configuracao"><span>Configurações de Sistema</span></a></li><li><a href="#"><span style="color: rgb(184, 184, 184);">Configurações</span></a></li><li><a href="#" class="sub-menu"><span>Registro de Atividades</span></a><ul><li><a href="/Atas/LogSistema/ListarLogs"><span>Consultar Logs de Sistema</span></a></li></ul></li><li><a href="#" class="sub-menu"><span>Rotinas do Módulo</span></a><ul><li><a href="/Atas/Sistema/ListarErros?regraNegocio=True"><span>Arquivos de Regras de Negócio</span></a></li><li><a href="/Atas/Sistema/GridRotinaModulo?regraNegocio=True"><span>Execução de Rotinas</span></a></li></ul></li><li><a href="/Atas/Sistema/ListarErros"><span>Arquivos de Exceções</span></a></li><li><a href="/Atas/Home/InfoSist"><span>Informações do Sistema</span></a></li></ul></li>
+            <ul class="mm-group mm-right">
+                <li class="mm-icon">
+                    <a title="" data-original-title="Módulos" href="#"><span class="mm-mod"></span></a>
+                    <ul class="ntc-mod">
+                                <li>
+                                    <a href="javascript:void(0)" data-value="/SEGIN/" class="linkNomeModulo">01 - Módulo de Segurança Interna</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)" data-value="/ITENS/" class="linkNomeModulo">02 - Módulo de Catálogo de Itens</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)" data-value="/REQS/" class="linkNomeModulo">03 - Módulo de Requisições Eletrônicas</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)" data-value="/COMPS/" class="linkNomeModulo">04 - Módulo de Preparação de Compras</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)" data-value="/ATAS/" class="linkNomeModulo">05 - Módulo de Atas de Registro de Preços</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)" data-value="/FORNEC/" class="linkNomeModulo">06 - Módulo de Fornecedores</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)" data-value="/PESQ/" class="linkNomeModulo">07 - Módulo de Pesquisa de Preços</a>
+                                </li>
+                                <li class="disabled">
+                                    <a href="javascript:void(0)" data-value="//" class="linkNomeModulo">08 - Módulo de Plan. Estratégico de Compras</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)" data-value="https://gcp.intra.rs.gov.br/GCP/" class="linkNomeModulo">09 - Módulo de Contratos</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)" data-value="/OCPEN/" class="linkNomeModulo">10 - Módulo de Ocorrências e Penalidades</a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)" data-value="/LIC/" class="linkNomeModulo">11 - Módulo de LIC</a>
+                                </li>
+
+                    </ul>
+                </li>
+                <li class="mm-icon"><a title="" data-original-title="Tela inicial" href="/Atas/Home/Inicio"><span class="mm-home"></span></a></li>
+                <li class="mm-icon"><a href="javascript:void(0);" title="" data-original-title="Sair" url="/Atas/Home/Deslogar" id="btnSairSistema"><span class="mm-sair"></span></a></li>
+            </ul>
+        </ul>
+    </div>
+    <input id="hdnTicket" name="hdnTicket" type="hidden" value="/Atas/Home/GerarTicketDirecionar" data-original-title="" title="" style="">
+    <!--FIM MENU-->
+    <!-- CAMINHO DE PÃO -->
+    <div class="breadcrumb">
+        <img src="/Atas/content/themes/images/icobreadcrumb.png" class="icobreadcrumb" alt=""><label><a href="/Atas/Home/Inicio" title="Tela Inicial" target="_top">Home</a></label>
+
+
+    <img src="/Atas/content/themes/images/icobreadcrumbseta.png" class="icobreadcrumbseta" alt=""><label>Consultas </label><img src="/Atas/content/themes/images/icobreadcrumbseta.png" class="icobreadcrumbseta" alt=""><label>Consulta de Itens em Ata Vigente</label>
+    </div>
+
+    <!-- CONTEUDO -->
+        <div class="conteudo-container">
+            <div class="conteudo-iframe">
+                
+
+
+
+
+<script src="/Atas/bundles/Consultas/listarTodosItensAtaVigente?v=E-8xZYo0tEZEpUTPJGCj6G3sfufY0MBMfOlNvvehWSo1" style=""></script>
+
+
+<!-- BARRA -->
+<div class="barra"> <div class="icoBarra"><img class="alerta-trigger" src="/Atas/content/themes/images/icoBarra.png" border="0"> </div><div class="tituloBarra" id="">Todos os Itens em Ata Vigente</div><ul><li><a href="javascript:void(0);" id="btnAbrirTodosItensAtaVigente" alt="A&lt;u&gt;b&lt;/u&gt;rir" data-original-title="Visualizar/Alterar dados" title="" oper="selecionar"><span>A<u>b</u>rir</span></a></li><li><a href="javascript:void(0);" id="btnImprimirTodosItensAtaVigente" alt="Imprimir" data-original-title="Imprimir" title="" oper="imprimir" class="filter-trigger"><span>Im<u>p</u>rimir</span></a></li><li><a href="javascript:void(0);" id="btnAbrirFiltroTodosItensAtaVigente" alt="Filtrar" data-original-title="Filtrar" title="" oper="filtro" class="filter-trigger btn-exec-filter"><span><u>F</u>iltrar</span></a></li><li><a href="javascript:void(0);" id="" alt="&lt;u&gt;V&lt;/u&gt;oltar" data-original-title="Voltar para página anterior" title="" class="btn-voltar" oper="voltar"><span><u>V</u>oltar</span></a></li></ul> </div>
+<!-- FIM BARRA -->
+<!--modal RELATÓRIO-->
+<div id="divmodalImprimir" class="modalRelatorio" style="display: none;">
+    <div class="modalRelatorioConteudo" style="height: 78%; width: 93%;">
+        <!-- BARRA -->
+        <div class="barra"> <div class="icoBarra"><img class="alerta-trigger" src="/Atas/content/themes/images/icoBarra.png" border="0"> </div><div class="tituloBarra" id="">Relatório de Todos os Itens em Ata Vigente</div><ul><li><a href="javascript:void(0);" id="btnFechaModalImprimirTodosItensAtaVigente" alt="Fechar" onclick="FecharModal()" data-original-title="Fechar" title=""><span>Fechar</span></a></li></ul> </div>
+        <!-- FIM BARRA -->
+        <iframe id="iframeImprimirTodosItensAtaVigente" class="iframe-imprimir" allowtransparency="true" frameborder="0"></iframe>
+    </div>
+</div>
+<!--FIM modal RELATÓRIO-->
+
+
+<script src="/Atas/bundles/jqueryval?v=BDunA0qt05w7fw2tXfc5rh1VKE74svTytS_N7weflrs1" style=""></script>
+
+<script src="/Atas/bundles/Consultas/gridTodosItensAtaVigente?v=E-OIxscTGk7zoHQotxz5hJixXEZ0srE30DhyyAmJuQg1" style=""></script>
+
+
+<!--FILTRO GRADE-->
+<div id="divFiltroTodosItensAtaVigente" class="modal" style="display: none;">
+    <div class="modalConteudo ui-draggable">
+
+        <!-- BARRA FILTRO -->
+        <div class="barra"> <div class="icoBarra"><img class="alerta-trigger" src="/Atas/content/themes/images/icoBarra.png" border="0"> </div><div class="tituloBarra" id="">Itens (Filtro)</div><ul><li><a href="javascript:void(0);" id="btnFiltrarTodosItensAtaVigente" alt="Filtrar" data-original-title="Filtrar" title="" oper="executarfiltro" class="filter-trigger btn-exec-filter"><span><u>F</u>iltrar</span></a></li><li><a href="javascript:void(0);" id="" divid="divFiltroTodosItensAtaVigente" alt="&lt;u&gt;L&lt;/u&gt;impar" class="btnmodal limpar" data-original-title="Limpar Filtro" title="" oper="limpar"><span><u>L</u>impar</span></a></li><li><a href="javascript:void(0);" id="btnFecharFiltroTodosItensAtaVigente" alt="Fechar" onclick="FecharModal()" data-original-title="Fechar" title=""><span>Fechar</span></a></li></ul> </div>
+
+        <!-- FIM BARRA FILTRO -->
+        <table class="tableFiltro">
+            <thead>
+                <tr>
+                    <td>Campo</td>
+                    <td class="center">Critério 1</td>
+                    <td class="center">Expressão 1</td>
+                    <td class="center">E / OU</td>
+                    <td class="center">Critério 2</td>
+                    <td class="center">Expressão 2</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><label class="labelinput">Nro Ata:</label></td><td class="tipo-filtro"><select><option value="0">Igual</option><option value="1">Diferente</option><option value="2">Menor</option><option value="3">Menor ou Igual</option><option value="4">Maior</option><option value="5">Maior ou Igual</option></select></td><td><input data-campo="Ata.NroARP" class="inteiro d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="0">Igual</option><option value="1">Diferente</option><option value="2">Menor</option><option value="3">Menor ou Igual</option><option value="4">Maior</option><option value="5">Maior ou Igual</option></select></td><td><input data-campo="Ata.NroARP" class="inteiro d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td></tr>
+                <tr><td><label class="labelinput">Unidade Gestora da Ada:</label></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="Ata.NomeUnidadeGestora" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="Ata.NomeUnidadeGestora" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td></tr>
+                <tr><td><label class="labelinput">Ano Ata:</label></td><td class="tipo-filtro"><select><option value="0">Igual</option><option value="1">Diferente</option><option value="2">Menor</option><option value="3">Menor ou Igual</option><option value="4">Maior</option><option value="5">Maior ou Igual</option></select></td><td><input data-campo="Ata.AnoArp" class="inteiro d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="0">Igual</option><option value="1">Diferente</option><option value="2">Menor</option><option value="3">Menor ou Igual</option><option value="4">Maior</option><option value="5">Maior ou Igual</option></select></td><td><input data-campo="Ata.AnoArp" class="inteiro d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td></tr>
+                <tr><td><label class="labelinput">Unidade de Regionalização:</label></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="Ata.NomeUnidadeRegionalizacao" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="Ata.NomeUnidadeRegionalizacao" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td></tr>
+                <tr><td><label class="labelinput">Cód. GCE:</label></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="CodGCE" class=" codGce numero right campo-duplo" style="width: 95%;" type="text" data-original-title="" title="" maxlength="16"></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="CodGCE" class=" codGce numero right campo-duplo" style="width: 95%;" type="text" data-original-title="" title="" maxlength="16"></td></tr>
+                <tr><td><label class="labelinput">Nome Modificador:</label></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="NomeModificador" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="NomeModificador" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td></tr>
+                <tr><td><label class="labelinput">Qtd.:</label></td><td class="tipo-filtro"><select><option value="0">Igual</option><option value="1">Diferente</option><option value="2">Menor</option><option value="3">Menor ou Igual</option><option value="4">Maior</option><option value="5">Maior ou Igual</option></select></td><td><input data-campo="QuantidadeItem" class="inteiro d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="0">Igual</option><option value="1">Diferente</option><option value="2">Menor</option><option value="3">Menor ou Igual</option><option value="4">Maior</option><option value="5">Maior ou Igual</option></select></td><td><input data-campo="QuantidadeItem" class="inteiro d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td></tr>
+                <tr><td><label class="labelinput">Unid. Medida:</label></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="SiglaUnidadeMedida" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="SiglaUnidadeMedida" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td></tr>
+                <tr><td><label class="labelinput">Prev. Consumo:</label></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="TipoPrevisaoConsumo" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="TipoPrevisaoConsumo" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td></tr>
+                <tr><td><label class="labelinput">Valor Unitário:</label></td><td class="tipo-filtro"><select><option value="0">Igual</option><option value="1">Diferente</option><option value="2">Menor</option><option value="3">Menor ou Igual</option><option value="4">Maior</option><option value="5">Maior ou Igual</option></select></td><td><input data-campo="ValorUnitario" class="moeda d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="0">Igual</option><option value="1">Diferente</option><option value="2">Menor</option><option value="3">Menor ou Igual</option><option value="4">Maior</option><option value="5">Maior ou Igual</option></select></td><td><input data-campo="ValorUnitario" class="moeda d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td></tr>
+                <tr><td><label class="labelinput">Valor Total:</label></td><td class="tipo-filtro"><select><option value="0">Igual</option><option value="1">Diferente</option><option value="2">Menor</option><option value="3">Menor ou Igual</option><option value="4">Maior</option><option value="5">Maior ou Igual</option></select></td><td><input data-campo="ValorTotal" class="moeda d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="0">Igual</option><option value="1">Diferente</option><option value="2">Menor</option><option value="3">Menor ou Igual</option><option value="4">Maior</option><option value="5">Maior ou Igual</option></select></td><td><input data-campo="ValorTotal" class="moeda d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td></tr>
+                <tr>
+                    <td><label class="labelinput" for="RitoExtraordinario">Rito Extraordinário:</label></td>
+                    <td><select><option>Igual</option></select></td>
+                    <td colspan="4">
+                        <select class="campo-select" data-campo="RitoExtraordinario" id="ddlRitoExtraordinario" name="ddlRitoExtraordinario"><option value=""></option>
+<option value="-1">NA - Utilizar quando não há rito extraordinário</option>
+<option value="1">COVID-19 - MP 926/2020 (Validade: 20/03/2020 até indeterminado)</option>
+<option value="2">Vacinação Covid-19(Lei 14.124/2021)</option>
+<option value="3">Covid-19 (Lei nº14.217/2021)</option>
+<option value="4">Calamidade Enchentes RS (MP nº 1.221/2024)</option>
+</select>
+                    </td>
+                </tr>
+                <tr><td><label class="labelinput">Situação:</label></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="TipoSituacao.NomeSituacao" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="TipoSituacao.NomeSituacao" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td></tr>
+                <tr><td><label class="labelinput">Termino de Vigência:</label></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="DataFimVigencia" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td><td class="tipo-filtro-combinacao"><select><option value="1">E</option><option value="2">OU</option></select></td><td class="tipo-filtro"><select><option value="6">Contém</option><option value="0">Igual</option><option value="1">Diferente</option><option value="7">Inicia</option><option value="8">Termina</option></select></td><td><input data-campo="DataFimVigencia" class=" d3 campo-duplo" style="width: 95%;" type="text" data-original-title="" title=""></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- FIM FILTRO GRADE-->
+<!-- TABELA UTILIZADA PARA MONTAGEM DA GRADE EM JS-->
+<div id="divExternaTodosItensAtaVigente" style="position: relative;">
+    <div id="dtTodosItensAtaVigente_wrapper" class="dataTables_wrapper" role="grid"><div id="dtTodosItensAtaVigente_length" class="dataTables_length"><label>Mostrar <select size="1" name="dtTodosItensAtaVigente_length" aria-controls="dtTodosItensAtaVigente"><option value="10">10</option><option value="25" selected="selected">25</option><option value="50">50</option><option value="-1">Todos</option></select> registros</label></div><div class="dataTables_filter" id="dtTodosItensAtaVigente_filter" style="display: none;"><label>Buscar: <input type="text" aria-controls="dtTodosItensAtaVigente" data-original-title="" title="" style=""></label></div><div id="dtTodosItensAtaVigente_processing" class="dataTables_processing" style="visibility: hidden; display: none;">Processando...</div><div class="dataTables_scroll"><div class="dataTables_scrollHead" style="overflow: hidden; position: relative; border: 0px; width: 100%;"><div class="dataTables_scrollHeadInner" style="width: 2070px; padding-right: 0px;"><table class="head-table display grid dataTable" style="margin-left: 0px; width: 2070px;"><thead>
+            <tr role="row"><th data-header="NroARP" class="right sorting_desc" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Nro Ata : activate to sort column ascending" style="width: 89px;"> Nro Ata </th><th data-header="UnidadeGestoraAta" class="center sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Unidade Gestora da Ata : activate to sort column ascending" style="width: 136px;"> Unidade Gestora da Ata </th><th data-header="NomeUnidadeRegionalizacao" class="center sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Unidade de Regionalização : activate to sort column ascending" style="width: 155px;"> Unidade de Regionalização </th><th data-header="CodGCE" class="right sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Cód. GCE : activate to sort column ascending" style="width: 92px;"> Cód. GCE </th><th data-header="NomeModificador" class="left sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Nome Modificador : activate to sort column ascending" style="width: 491px;"> Nome Modificador </th><th data-header="Qtd" class="right sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Qtd. : activate to sort column ascending" style="width: 45px;"> Qtd. </th><th data-header="UnidadeMedida" class="center sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Unid. Med. : activate to sort column ascending" style="width: 68px;"> Unid. Med. </th><th data-header="PrevConsumo" class="center sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Prev. Consumo : activate to sort column ascending" style="width: 98px;"> Prev. Consumo </th><th data-header="ValorUnitario" class="right sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Valor Unitário : activate to sort column ascending" style="width: 96px;"> Valor Unitário </th><th data-header="ValorTotal" class="right sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Valor Total : activate to sort column ascending" style="width: 93px;"> Valor Total </th><th data-header="RitoExtraordinario" class="left sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Rito Extraordinário : activate to sort column ascending" style="width: 109px;"> Rito Extraordinário </th><th data-header="TipoSituacao.NomeSituacao" class="center sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Situação : activate to sort column ascending" style="width: 91px;"> Situação </th><th data-header="DataFimVigencia" class="center sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Término de Vigência : activate to sort column ascending" style="width: 117px;"> Término de Vigência </th></tr>
+        </thead></table></div></div><div class="dataTables_scrollBody" style="overflow: auto; width: 100%; height: 462px;"><table id="dtTodosItensAtaVigente" class="head-table display grid dataTable" aria-describedby="dtTodosItensAtaVigente_info" style="margin-left: 0px; width: 2070px;"><thead>
+            <tr role="row" style="height: 0px;"><th data-header="NroARP" class="right sorting_desc" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Nro Ata : activate to sort column ascending" style="width: 89px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th><th data-header="UnidadeGestoraAta" class="center sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Unidade Gestora da Ata : activate to sort column ascending" style="width: 136px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th><th data-header="NomeUnidadeRegionalizacao" class="center sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Unidade de Regionalização : activate to sort column ascending" style="width: 155px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th><th data-header="CodGCE" class="right sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Cód. GCE : activate to sort column ascending" style="width: 92px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th><th data-header="NomeModificador" class="left sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Nome Modificador : activate to sort column ascending" style="width: 491px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th><th data-header="Qtd" class="right sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Qtd. : activate to sort column ascending" style="width: 45px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th><th data-header="UnidadeMedida" class="center sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Unid. Med. : activate to sort column ascending" style="width: 68px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th><th data-header="PrevConsumo" class="center sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Prev. Consumo : activate to sort column ascending" style="width: 98px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th><th data-header="ValorUnitario" class="right sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Valor Unitário : activate to sort column ascending" style="width: 96px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th><th data-header="ValorTotal" class="right sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Valor Total : activate to sort column ascending" style="width: 93px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th><th data-header="RitoExtraordinario" class="left sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Rito Extraordinário : activate to sort column ascending" style="width: 109px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th><th data-header="TipoSituacao.NomeSituacao" class="center sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Situação : activate to sort column ascending" style="width: 91px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th><th data-header="DataFimVigencia" class="center sorting" role="columnheader" tabindex="0" aria-controls="dtTodosItensAtaVigente" rowspan="1" colspan="1" aria-label=" Término de Vigência : activate to sort column ascending" style="width: 117px; padding-top: 0px; padding-bottom: 0px; border-top-width: 0px; border-bottom-width: 0px; height: 0px;"></th></tr>
+        </thead>
+        
+        
+    <tbody role="alert" aria-live="polite" aria-relevant="all"><tr class="odd"><td class="right sorting_1">115/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">0495.0868.009991</td><td class="left">VIDRO PLANO - 2,00MM TRANSPARENTE</td><td class="right">295</td><td class="center">m2</td><td class="center">Total</td><td class="right">84,99</td><td class="right">25.072,05</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">20/02/2027</td></tr><tr class="even"><td class="right sorting_1">114/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">0495.0177.009995</td><td class="left">ESPELHO - PLANO MADEIRA MDF OU METAL ALUMÍNIO 600,00MM 1.600MM 3MM RETANGULAR</td><td class="right">270</td><td class="center">un</td><td class="center">Total</td><td class="right">388,84</td><td class="right">104.986,80</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">20/02/2027</td></tr><tr class="odd"><td class="right sorting_1">113/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">0480.0091.000017</td><td class="left">CHUVEIRO - ELÉTRICO - BRANCA - 127V OU 220V - MÍNIMO 5.500W</td><td class="right">6545</td><td class="center">un</td><td class="center">Total</td><td class="right">39,72</td><td class="right">259.967,40</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">20/02/2027</td></tr><tr class="even"><td class="right sorting_1">113/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">0480.0091.009992</td><td class="left">CHUVEIRO ELÉTRICO - BRANCA 127 V MÍNIMO 5500W</td><td class="right">895</td><td class="center">un</td><td class="center">Total</td><td class="right">85,34</td><td class="right">76.379,30</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">20/02/2027</td></tr><tr class="odd"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000001</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X3 - GERAL</td><td class="right">30</td><td class="center">un</td><td class="center">Total</td><td class="right">51.114,78</td><td class="right">1.533.443,40</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="even"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000002</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X3 - GERAL - 2 BANHEIROS</td><td class="right">20</td><td class="center">un</td><td class="center">Total</td><td class="right">57.400,20</td><td class="right">1.148.004,00</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="odd"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000003</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - GERAL</td><td class="right">60</td><td class="center">un</td><td class="center">Total</td><td class="right">66.718,63</td><td class="right">4.003.117,80</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="even"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000004</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - GERAL C/ LAVABO</td><td class="right">20</td><td class="center">un</td><td class="center">Total</td><td class="right">79.467,05</td><td class="right">1.589.341,00</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="odd"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000020</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 -  GERAL SEM 1 PAREDE</td><td class="right">40</td><td class="center">un</td><td class="center">Total</td><td class="right">63.235,23</td><td class="right">2.529.409,20</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="even"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000021</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - GERAL C/ LAVABO SEM 1 PAREDE</td><td class="right">70</td><td class="center">un</td><td class="center">Total</td><td class="right">73.304,91</td><td class="right">5.131.343,70</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="odd"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000005</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - SALA -3 PAREDES-PORTA_LATERAL</td><td class="right">250</td><td class="center">un</td><td class="center">Total</td><td class="right">65.449,13</td><td class="right">16.362.282,50</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="even"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000007</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - SALA -3 PAREDES-JANELAS</td><td class="right">30</td><td class="center">un</td><td class="center">Total</td><td class="right">67.684,36</td><td class="right">2.030.530,80</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="odd"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000008</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - SALA -2 PAREDES-JANELAS</td><td class="right">245</td><td class="center">un</td><td class="center">Total</td><td class="right">58.329,73</td><td class="right">14.290.783,85</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="even"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000043</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - COZINHA</td><td class="right">40</td><td class="center">un</td><td class="center">Total</td><td class="right">74.277,47</td><td class="right">2.971.098,80</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="odd"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000009</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - COZ_PEG-01</td><td class="right">30</td><td class="center">un</td><td class="center">Total</td><td class="right">62.539,66</td><td class="right">1.876.189,80</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="even"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000010</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - COZ_PEG-02</td><td class="right">30</td><td class="center">un</td><td class="center">Total</td><td class="right">85.668,06</td><td class="right">2.570.041,80</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="odd"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000026</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 – REF-3 PAREDES</td><td class="right">55</td><td class="center">un</td><td class="center">Total</td><td class="right">65.500,70</td><td class="right">3.602.538,50</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="even"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000027</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 – REF-2 PAREDES</td><td class="right">30</td><td class="center">un</td><td class="center">Total</td><td class="right">55.780,52</td><td class="right">1.673.415,60</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="odd"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000028</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 – BANHEIROS-PNE-VEST</td><td class="right">30</td><td class="center">un</td><td class="center">Total</td><td class="right">97.651,59</td><td class="right">2.929.547,70</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="even"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000015</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - BANHEIRO FEMINIMO</td><td class="right">55</td><td class="center">un</td><td class="center">Total</td><td class="right">109.646,40</td><td class="right">6.030.552,00</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="odd"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000016</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - BANHEIRO MASCULINO</td><td class="right">55</td><td class="center">un</td><td class="center">Total</td><td class="right">107.624,52</td><td class="right">5.919.348,60</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="even"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000029</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - RESERVATORIO SIMPLES</td><td class="right">60</td><td class="center">un</td><td class="center">Total</td><td class="right">81.273,24</td><td class="right">4.876.394,40</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="odd"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000030</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - RESERVATORIO CONJUGADO</td><td class="right">85</td><td class="center">un</td><td class="center">Total</td><td class="right">70.412,30</td><td class="right">5.985.045,50</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="even"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000019</td><td class="left">UNIDADE MODULAR -  LOTE 2 - MODULO 3X6 - CASA DE MÁQUINAS</td><td class="right">85</td><td class="center">un</td><td class="center">Total</td><td class="right">74.362,61</td><td class="right">6.320.821,85</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr><tr class="odd"><td class="right sorting_1">101/2026</td><td class="center">SPGG - CELIC - SUBSECRETARIA DA ADMIN. CENTRAL DE LICITAÇÕES</td><td class="center"></td><td class="right">1002.0004.000031</td><td class="left">UNIDADE MODULAR - LOTE 2 - MODULO 2X6 – CORREDOR - S/LATERAL</td><td class="right">460</td><td class="center">un</td><td class="center">Total</td><td class="right">14.255,49</td><td class="right">6.557.525,40</td><td class="left">NA - Utilizar quando não há rito extraordinário</td><td class="center">Disponível</td><td class="center">11/02/2027</td></tr></tbody></table></div></div><div class="dataTables_info" id="dtTodosItensAtaVigente_info">Listando 1 - 25 de 5,477 registros. </div><div class="dataTables_paginate paging_full_numbers" id="dtTodosItensAtaVigente_paginate"><a tabindex="0" class="first paginate_button paginate_button_disabled" id="dtTodosItensAtaVigente_first">Primeiro</a><a tabindex="0" class="previous paginate_button paginate_button_disabled" id="dtTodosItensAtaVigente_previous" style="display: none;">Anterior</a><span><a tabindex="0" class="paginate_active">1</a><a tabindex="0" class="paginate_button">2</a><a tabindex="0" class="paginate_button">3</a><a tabindex="0" class="paginate_button">4</a><a tabindex="0" class="paginate_button">5</a></span><a tabindex="0" class="next paginate_button" id="dtTodosItensAtaVigente_next" style="display: none;">Próximo</a><a tabindex="0" class="last paginate_button" id="dtTodosItensAtaVigente_last">Último</a></div></div>
+</div>
+<!-- FIM TABELA UTILIZADA PARA MONTAGEM DA GRADE EM JS-->
+
+
+            </div>
+        </div>
+    <!--FIM CONTEUDO -->
+    <!--NOTIFICAÇÃO-->
+    <div id="divAlerta" class="notificacao" style="display: none;">
+        <ul id="ulAlerta" class="lista-alerta"></ul>
+    </div>
+    <!--FIM NOTIFICAÇÃO-->
+    <!--CARREGANDO-->
+    <div id="divCarregando" class="alert load" style="display: none;">
+        <div id="carregando">
+            <label>Aguarde, CARREGANDO...</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i class="spin large"></i>
+        </div>
+    </div>
+    <!--FIM CARREGANDO-->
+    <div id="divCarregandoExterno" class="alert load" style="display: none;">
+        <div id="carregando">
+            <label id="lblMensagemAguardeExterno"></label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i class="spin large"></i>
+        </div>
+    </div>
+
+    <!--NOVO ALERTA-->
+    <div class="alert load" id="box-confirm" style="display: none;">
+        <div id="alertasWindow">
+            <label id="lblConfirm">O Cadastro foi Gravado com Sucesso !!</label>
+            <br>
+            <br>
+            <button id="btnOkConfirm" data-original-title="" title="">OK</button>
+            <button id="btnCancelConfirm" data-original-title="" title="">Cancelar</button>
+        </div>
+    </div>
+    <!--FIM CONFIRMA-->
+    <!--MODELO ALERTA ERRO-->
+    <div class="alert alerta" id="box-erro" style="display: none;">
+        <div id="alerta_Erro" style="left: -15px">
+            <span data-icon=""></span>
+            <br>
+            <label id="lblMsgErro">Tente Novamente.</label>
+            <br>
+            <br>
+            <button id="btnAlertErro" onclick="javascript:$('#box-erro').hide();" data-original-title="" title="">OK</button>
+        </div>
+    </div>
+    <!-- FIM MODELO SEM USO-->
+
+    <input type="hidden" id="hdnErroUrl" value="/Atas/Home/Erro" data-original-title="" title="" style="">
+    <input type="hidden" id="hdnNaoAutorizadoUrl" value="/Atas/Home/NaoAutorizado" data-original-title="" title="" style="">
+    <input type="hidden" id="hdnNaoLogadoUrl" value="/Atas/" data-original-title="" title="" style="">
+    <script>
+        $(".modern-menu li ul li a[href='/Atas/'] span").css('color', '#B8B8B8');
+        $(".modern-menu li ul li a[href='/Atas/']").attr("href", "#");
+    </script>
+
+
+</body></html>

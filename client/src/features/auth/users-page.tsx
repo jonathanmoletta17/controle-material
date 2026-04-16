@@ -38,15 +38,15 @@ export default function UsersPage() {
     const [newUserRole, setNewUserRole] = useState("manutencao");
 
     const { data: users, isLoading } = useQuery<User[]>({
-        queryKey: ["/api/users"],
+        queryKey: ["/api/management/users"],
     });
 
     const createUserMutation = useMutation({
         mutationFn: async (data: { username: string; role: string }) => {
-            return apiRequest("POST", "/api/users", data);
+            return apiRequest("POST", "/api/management/users", data);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/management/users"] });
             setIsAddUserOpen(false);
             setNewUserUsername("");
             setNewUserRole("manutencao");
@@ -63,10 +63,10 @@ export default function UsersPage() {
 
     const updateRoleMutation = useMutation({
         mutationFn: async ({ id, role }: { id: string; role: string }) => {
-            return apiRequest("PATCH", `/api/users/${id}/role`, { role });
+            return apiRequest("PATCH", `/api/management/users/${id}/role`, { role });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/management/users"] });
             toast({ title: "Permissão atualizada" });
         },
         onError: (error: any) => {
@@ -80,10 +80,10 @@ export default function UsersPage() {
 
     const deleteUserMutation = useMutation({
         mutationFn: async (id: string) => {
-            return apiRequest("DELETE", `/api/users/${id}`);
+            return apiRequest("DELETE", `/api/management/users/${id}`);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/management/users"] });
             toast({ title: "Usuário removido" });
         },
         onError: (error: any) => {
@@ -144,6 +144,7 @@ export default function UsersPage() {
                                     <SelectContent>
                                         <SelectItem value="manutencao">Manutenção</SelectItem>
                                         <SelectItem value="patrimonio">Patrimônio</SelectItem>
+                                        <SelectItem value="visualizador">Visualizador</SelectItem>
                                         <SelectItem value="admin">Administrador</SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -190,6 +191,7 @@ export default function UsersPage() {
                                             <SelectContent>
                                                 <SelectItem value="manutencao">Manutenção</SelectItem>
                                                 <SelectItem value="patrimonio">Patrimônio</SelectItem>
+                                                <SelectItem value="visualizador">Visualizador</SelectItem>
                                                 <SelectItem value="admin">Administrador</SelectItem>
                                             </SelectContent>
                                         </Select>

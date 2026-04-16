@@ -168,7 +168,7 @@ export default function ItemsList() {
       const matchesSearch =
         searchQuery === "" ||
         item.itemNome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.codigoGce.toLowerCase().includes(searchQuery.toLowerCase());
+        (item.codigoGce ?? "").toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesLowStock = showLowStockOnly
         ? item.estoqueAtual <= item.estoqueMinimo && item.ativo

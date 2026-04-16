@@ -25,9 +25,19 @@ DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
 
 def get_db_connection():
+    host = DB_HOST
+    port = DB_PORT
+    
+    # Se estiver rodando localmente (fora do docker) e o host for 'db', 
+    # ajusta para localhost e a porta externa exposta (ex: 5434)
+    if host == 'db' and not os.path.exists('/.dockerenv'):
+        print("Aviso: Rodando fora do Docker. Redirecionando conexão do banco para localhost:5434")
+        host = 'localhost'
+        port = os.getenv("DB_EXTERNAL_PORT", "5434")
+
     return psycopg2.connect(
-        host=DB_HOST,
-        port=DB_PORT,
+        host=host,
+        port=port,
         database=DB_NAME,
         user=DB_USER,
         password=DB_PASS
@@ -112,183 +122,125 @@ def scrape_atas():
         print(f"Navegando para: {TARGET_URL}")
         page.goto(TARGET_URL)
         
-        # --- SCRAPING LOOP ---
-        current_page = 1
-        has_next_page = True
-        total_updated = 0
-        
-        while has_next_page:
-            print(f"\n--- Processando Página {current_page} ---")
+        # --- SCRAPING BULK PROCESSING VIA PAGINATION ---
+        try:
+            print("Iniciando varredura com paginação...")
+            updates = []
+            page_num = 1
             
-                print("DEBUG: Página carregada. Capturando HTML...", flush=True)
-                # Screenshot for visual debug
-                page.screenshot(path="debug_table_before.png")
+            while True:
+                print(f"--- Processando Página {page_num} ---")
                 
-                with open("debug_page_source.html", "w", encoding="utf-8") as f:
-                    f.write(page.content())
+                # Aguarda o aviso de "Processando..." sumir
+                processing_locator = page.locator("#dtTodosItensAtaVigente_processing")
+                if processing_locator.is_visible():
+                    processing_locator.wait_for(state="hidden", timeout=60000)
                 
-                print("DEBUG: HTML salvo. Buscando tabela...", flush=True)
-
-                # Wait for table
-                page.wait_for_selector("table tbody tr", timeout=20000)
+                time.sleep(1) # Extra stability for DataTables JS redraw
                 
-                # Get all rows
+                # Vamos buscar todas as linhas rendered na página atual
                 rows = page.locator("table tbody tr").all()
-                print(f"Encontradas {len(rows)} linhas na tabela.", flush=True)
-
-                with open("debug_cells.txt", "w", encoding="utf-8") as f:
-                    for i, row in enumerate(rows):
-                        cells = row.locator("td").all_text_contents()
-                        f.write(f"DEBUG ROW {i}: {cells}\n")
-                        print(f"DEBUG ROW {i}: {cells}", flush=True)
-
-                        # TENTATIVA DE MAPEAMENTO (Ajustar baseada no output real se falhar)
-                    # Exemplo hipotético de colunas:
-                    # 0: Código Elemento? 
-                    # 1: Código Item (GCE)? -> formato 0000.0000.000000
-                    # 2: Descrição?
-                    # 3: Nº Ata?
-                    # 4: Validade?
-                    # 5: Valor?
+                print(f"Encontradas {len(rows)} linhas na página {page_num}.")
+                
+                for i, row in enumerate(rows):
+                    # Extrai texto bruto (células)
+                    cells = row.locator("td").all_text_contents()
                     
-                    codigo_gce = None
-                    ata_num = None
-                    validade = None
-                    valor = None
+                    if len(cells) < 5: 
+                        continue
 
-                    # Procura o código GCE nas células
+                    codigo_gce = None
+                    
+                    # Encontra Codigo GCE formatado (ex: 0000.0000.000000)
                     for cell in cells:
                         cell = cell.strip()
                         if re.match(r"^\d{4}\.\d{4}\.\d{6}$", cell):
                             codigo_gce = cell
                             break
-                    
+                            
                     if not codigo_gce:
-                        continue # Pula se não achar código GCE
-
-                    # Assume posições relativas ou procura padrões para os outros dados
-                    # Assumindo que Ata tem formato XXXX/XXXX ou similar, ou é apenas um número
-                    # Assumindo Validade é data dd/mm/yyyy
-                    # Assumindo Valor tem R$ ou vírgula
+                        continue
                     
-                    # IMPLEMENTAÇÃO ROBUSTA: Varrer células
-                    for cell in cells:
-                        txt = cell.strip()
-                        if txt == codigo_gce: continue
-                        
-                        # Data (Validade)
-                        if re.match(r"^\d{2}/\d{2}/\d{4}$", txt):
-                            validade = parse_date(txt)
-                        
-                        # Valor (contém R$ ou formato moeda) -- Cuidado para não confundir com outros valores
-                        elif "R$" in txt or re.match(r"^\d{1,3}(\.\d{3})*,\d{2}$", txt):
-                             # Se já pegamos um valor, talvez seja melhor não sobrescrever ou usar lógica específica
-                             # Normalmente o valor unitário da ata é o que queremos
-                             if not valor: 
-                                 valor = parse_currency(txt)
-                        
-                        # Ata (difícil padronizar, mas geralmente é curta e tem ano)
-                        # Ex: 0123/2024. Vamos pegar o que sobrar ou usar índice fixo se descoberta a estrutura
-                        # Por enquanto, vou confiar na ordem se o usuário confirmar, mas vou tentar mapear indices fixos
-                        # Baseado no pedido "atualizar a ata mais recente", deve ser um campo explícito.
-                    
-                    # REFINANDO COM ÍNDICES FIXOS (Mais seguro se a tabela for padrão)
-                    # Vou usar os índices baseados no debug ou assumir o padrão mais comum.
-                    # Se falhar, o log vai mostrar.
-                    # Vamos chutar índices comuns:
-                    # Col 0: Codigo GCE? ou Col 1.
-                    # Vamos tentar pegar indices baseados na primeira linha detectada (logica 1.0)
-                    # Vou assumir que:
-                    # Codigo GCE é o identificador.
-                    # Precisamos do numero da ATA e Validade.
-                    
-                    # ESTRATÉGIA MELHOR:
-                    # Se achamos o Código GCE na coluna I,
-                    # Ata costuma estar próxima.
-                    # Validade é data.
-                    # Vamos tentar pegar a string que parece uma Ata.
-                    
-                    # Para a primeira versão, vamos tentar identificar colunas pelo cabeçalho?
-                    # Não, o Playwright pega tbody direto.
-                    # Vamos pegar índices fixos baseados num layout comum de "Listar Itens".
-                    # Geralmente: Item, Descricao, Unidade, Preço, Ata, Validade, Fornecedor
-                    
-                    # Se eu não tenho certeza das colunas, vou logar as células e tentar inferir no loop
-                    # Mas para "funcionar" agora, vou tentar pegar:
-                    # Codigo = Regex GCE
-                    # Data = Regex Data
-                    # Ata = Célula que não é data, nem valor, nem código, nem descrição longa?
-                    
-                    # Vamos simplificar:
-                    # Se encontrou código GCE.
-                    # Atualiza no banco.
-                    
-                    if codigo_gce:
-                        # Tenta achar a ata e validade nas outras colunas
-                         # Pega a data (validade)
+                    # Coleta Validade do Final da Linha
+                    possible_date = cells[-1].strip()
+                    if re.match(r"^\d{2}/\d{2}/\d{4}$", possible_date):
+                        validade_str = possible_date
+                    else:
                         dates = [c for c in cells if re.match(r"^\d{2}/\d{2}/\d{4}$", c.strip())]
-                        validade_str = dates[0] if dates else None
-                        validade_db = parse_date(validade_str)
-
-                        # Pega o valor
-                        money = [c for c in cells if "R$" in c or re.match(r"^\d+,\d{2}$", c.strip())]
-                        valor_db = None
-                        if money:
-                             valor_db = parse_currency(money[0])
-
-                        # Pega a Ata (geralmente tem barra e ano, ex 123/2023)
-                        atas = [c for c in cells if "/" in c and not re.match(r"^\d{2}/\d{2}/\d{4}$", c.strip()) and len(c) < 20]
-                        ata_db = atas[0].strip() if atas else None
-
-                        if ata_db and validade_db:
-                            try:
-                                cur = conn.cursor()
-                                # Atualiza items
-                                cur.execute("""
-                                    UPDATE items 
-                                    SET ata = %s, validade_ata = %s, valor_unitario_ata = %s
-                                    WHERE codigo_gce = %s
-                                """, (ata_db, validade_db, valor_db, codigo_gce))
-                                if cur.rowcount > 0:
-                                    total_updated += 1
-                                conn.commit()
-                                cur.close()
-                            except Exception as db_err:
-                                print(f"Erro DB ao atualizar {codigo_gce}: {db_err}")
-                                conn.rollback()
-
-                # --- PAGINATION ---
-                # Clica no próximo número
-                next_page = current_page + 1
-                
-                # Procura link com o texto do próximo número
-                # Seletor: a.paginate_button >> text="2" (estrito)
-                next_link = page.locator(f"a.paginate_button:text-is('{next_page}')")
-                
-                if next_link.count() > 0 and next_link.is_visible():
-                    print(f"Indo para página {next_page}...")
-                    # --- DEBUG LIMIT ---
-                    if current_page >= 1:
-                        print("DEBUG: Limite de 1 página atingido. Parando.")
-                        has_next_page = False
-                        break
-                    # -------------------
-                    next_link.click()
-                    # Espera a tabela atualizar (loading ou mudança de linha)
-                    # Um jeito simples é esperar que o botão da página atual mude de classe ou desapareça/fique disabled
-                    # Ou esperar um pequeno tempo fixo + verificação
-                    time.sleep(2) # Espera simples por segurança
-                    current_page += 1
-                else:
-                    print("Próxima página não encontrada. Fim da paginação.")
-                    has_next_page = False
+                        validade_str = dates[-1] if dates else None
+                        
+                    validade_db = parse_date(validade_str)
                     
-            except Exception as e:
-                print(f"Erro na página {current_page}: {e}")
-                has_next_page = False
+                    # Coleta Valor (Money)
+                    money = [c for c in cells if "R$" in c or re.match(r"^\d+,\d{2}$", c.strip())]
+                    valor_db = None
+                    if money:
+                        valor_db = parse_currency(money[0])
+                        
+                    # Coleta Número da ATA ignorando Datas
+                    atas = [c for c in cells if "/" in c and not re.match(r"^\d{2}/\d{2}/\d{4}$", c.strip()) and len(c) < 20]
+                    ata_db = atas[0].strip() if atas else None
+                    
+                    if ata_db and validade_db:
+                        # Monta pacote (val, valUnitario, ident, ident) 
+                        updates.append((validade_db, valor_db, codigo_gce, ata_db))
 
-        print(f"Processamento finalizado. Total de itens atualizados: {total_updated}")
-        conn.close()
+                # --- Paginação ---
+                # Acha o número da próxima página (ex: se estamos na 1, procura o botão "2").
+                # Isso é muito mais seguro do que um XPath absoluto (que pode quebrar) ou xpath fixo de posição a[2]
+                next_page_str = str(page_num + 1)
+                next_button = page.locator(f"xpath=//a[contains(@class, 'paginate_button') and text()='{next_page_str}']")
+                
+                # Se o botão não existir, ou se chegamos na última página e por algum motivo ele ficou invisível:
+                if next_button.count() == 0 or not next_button.first.is_visible():
+                    print(f"Fim da paginação (botão '{next_page_str}' não encontrado). Última página atingida: {page_num}")
+                    break
+                
+                # Clica na próxima página e aguarda a transição
+                print("Indo para a próxima página...")
+                next_button.click(force=True)
+                
+                # Espera 1s para o site acusar que está "processando" e volta ao loop, que aguardará o processando sumir
+                time.sleep(1)
+                
+                page_num += 1
+
+            # --- BULK Pushing para o BD ---
+            print(f"\nExtração concluída com sucesso! Varremos {page_num} páginas. Gerados {len(updates)} pacotes de atualização.")
+            print("Executando injeção em lote no banco local...")
+            
+            if updates:
+                total_updated = 0
+                cur = conn.cursor()
+                try:
+                    # Prepara a query de UPDATE
+                    query = """
+                        UPDATE items 
+                        SET validade_ata = %s, valor_unitario_ata = %s
+                        WHERE codigo_gce = %s AND ata = %s
+                    """
+                    
+                    # Vamos varrendo um por um e comittando ao final. 
+                    for update in updates:
+                        cur.execute(query, update)
+                        if cur.rowcount > 0:
+                            total_updated += int(cur.rowcount)
+                            
+                    conn.commit()
+                    print(f"==> OPERAÇÃO CONCLUÍDA: {total_updated} linhas efetivamente corrigidas e ativadas no banco local <==")
+                except Exception as db_err:
+                    print(f"Erro CRÍTICO no momento do commit em massa: {db_err}")
+                    conn.rollback()
+                finally:
+                    cur.close()
+            else:
+                print("Nenhum dado qualificado de Data ou ATA foi detectado para efetuar update nas listagens.")
+                
+        except Exception as e:
+            print(f"Erro na varredura HTML ou interação de paginação: {e}")
+
+        if conn:
+            conn.close()
         browser.close()
 
 if __name__ == "__main__":
