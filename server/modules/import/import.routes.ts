@@ -125,7 +125,8 @@ router.post("/import", upload.single("file"), async (req: Request, res: Response
                   // String format (e.g. DD/MM/YYYY)
                   const parts = String(value).split('/');
                   if (parts.length === 3) {
-                    const date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                    // Date.UTC prevents timezone offset from shifting the day
+                    const date = new Date(Date.UTC(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0])));
                     value = isNaN(date.getTime()) ? null : date;
                   } else {
                     value = null;

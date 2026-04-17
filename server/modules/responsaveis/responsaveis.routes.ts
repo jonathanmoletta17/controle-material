@@ -3,6 +3,7 @@ import { db } from "../../db";
 import { responsaveis, insertResponsavelSchema } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
+import { handleRouteError } from "../../lib/errors";
 
 const router = Router();
 
@@ -12,8 +13,7 @@ router.get("/", async (req, res) => {
         const allResponsaveis = await db.select().from(responsaveis).where(eq(responsaveis.ativo, true)).orderBy(desc(responsaveis.nome));
         res.json(allResponsaveis);
     } catch (error) {
-        console.error("Error fetching responsaveis:", error);
-        res.status(500).json({ error: "Failed to fetch responsaveis" });
+        handleRouteError(res, error, "Failed to fetch responsaveis");
     }
 });
 
@@ -27,8 +27,7 @@ router.post("/", async (req, res) => {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: error.errors });
         }
-        console.error("Error creating responsavel:", error);
-        res.status(500).json({ error: "Failed to create responsavel" });
+        handleRouteError(res, error, "Failed to create responsavel");
     }
 });
 
@@ -49,8 +48,7 @@ router.put("/:id", async (req, res) => {
 
         res.json(result[0]);
     } catch (error) {
-        console.error("Error updating responsavel:", error);
-        res.status(500).json({ error: "Failed to update responsavel" });
+        handleRouteError(res, error, "Failed to update responsavel");
     }
 });
 
@@ -78,8 +76,7 @@ router.delete("/:id", async (req, res) => {
 
         res.json({ message: "Responsavel deactivated" });
     } catch (error) {
-        console.error("Error deleting responsavel:", error);
-        res.status(500).json({ error: "Failed to delete responsavel" });
+        handleRouteError(res, error, "Failed to delete responsavel");
     }
 });
 

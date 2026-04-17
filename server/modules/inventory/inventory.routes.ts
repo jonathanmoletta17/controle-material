@@ -4,6 +4,7 @@ import { insertItemSchema, insertMovimentoSchema } from "@shared/schema";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
+import { handleRouteError } from "../../lib/errors";
 
 const UPLOADS_DIR = path.resolve("uploads/items");
 
@@ -41,8 +42,7 @@ router.get("/items", async (req: Request, res: Response) => {
     const items = await inventoryService.getAllItems();
     res.json(items);
   } catch (error) {
-    console.error("Error fetching items:", error);
-    res.status(500).json({ error: "Failed to fetch items" });
+    handleRouteError(res, error, "Failed to fetch items");
   }
 });
 
@@ -54,8 +54,7 @@ router.get("/items/:id", async (req: Request, res: Response) => {
     }
     res.json(item);
   } catch (error) {
-    console.error("Error fetching item:", error);
-    res.status(500).json({ error: "Failed to fetch item" });
+    handleRouteError(res, error, "Failed to fetch item");
   }
 });
 
@@ -73,8 +72,7 @@ router.post("/items", requireAdmin, async (req: Request, res: Response) => {
     const item = await inventoryService.createItem(parsed.data);
     res.status(201).json(item);
   } catch (error) {
-    console.error("Error creating item:", error);
-    res.status(500).json({ error: "Failed to create item" });
+    handleRouteError(res, error, "Failed to create item");
   }
 });
 
@@ -94,8 +92,7 @@ router.put("/items/:id", requireAdmin, async (req: Request, res: Response) => {
     }
     res.json(item);
   } catch (error) {
-    console.error("Error updating item:", error);
-    res.status(500).json({ error: "Failed to update item" });
+    handleRouteError(res, error, "Failed to update item");
   }
 });
 
@@ -107,8 +104,7 @@ router.delete("/items/:id", requireAdmin, async (req: Request, res: Response) =>
     }
     res.status(204).send();
   } catch (error) {
-    console.error("Error deleting item:", error);
-    res.status(500).json({ error: "Failed to delete item" });
+    handleRouteError(res, error, "Failed to delete item");
   }
 });
 
@@ -143,8 +139,7 @@ router.post(
       if (error.code === "LIMIT_FILE_SIZE") {
         return res.status(400).json({ error: "Arquivo muito grande. Máximo 5MB." });
       }
-      console.error("Error uploading image:", error);
-      res.status(500).json({ error: error.message || "Failed to upload image" });
+      handleRouteError(res, error, "Failed to upload image");
     }
   }
 );
@@ -167,8 +162,7 @@ router.delete(
       const item = await inventoryService.updateItem(req.params.id, { imagemUrl: null } as any);
       res.json(item);
     } catch (error) {
-      console.error("Error removing image:", error);
-      res.status(500).json({ error: "Failed to remove image" });
+      handleRouteError(res, error, "Failed to remove image");
     }
   }
 );
@@ -178,8 +172,7 @@ router.get("/items/:id/movements", async (req: Request, res: Response) => {
     const movimentos = await inventoryService.getMovimentos(req.params.id);
     res.json(movimentos);
   } catch (error) {
-    console.error("Error fetching movements:", error);
-    res.status(500).json({ error: "Failed to fetch movements" });
+    handleRouteError(res, error, "Failed to fetch movements");
   }
 });
 
@@ -217,9 +210,8 @@ router.post("/items/:id/movements", async (req: Request, res: Response) => {
     }
     const movimento = await inventoryService.createMovimento(parsed.data);
     res.status(201).json(movimento);
-  } catch (error: any) {
-    console.error("Error creating movement:", error);
-    res.status(500).json({ error: error.message || "Failed to create movement" });
+  } catch (error) {
+    handleRouteError(res, error, "Failed to create movement");
   }
 });
 
@@ -234,8 +226,7 @@ router.get("/movements", async (req: Request, res: Response) => {
       res.json(movements);
     }
   } catch (error) {
-    console.error("Error fetching movements:", error);
-    res.status(500).json({ error: "Failed to fetch movements" });
+    handleRouteError(res, error, "Failed to fetch movements");
   }
 });
 
@@ -251,8 +242,7 @@ router.get("/movements/search", async (req: Request, res: Response) => {
     const movements = await inventoryService.getFilteredMovements(filters);
     res.json(movements);
   } catch (error) {
-    console.error("Error searching movements:", error);
-    res.status(500).json({ error: "Failed to search movements" });
+    handleRouteError(res, error, "Failed to search movements");
   }
 });
 
@@ -261,8 +251,7 @@ router.get("/alerts", async (req: Request, res: Response) => {
     const alerts = await inventoryService.getAlerts();
     res.json(alerts);
   } catch (error) {
-    console.error("Error fetching alerts:", error);
-    res.status(500).json({ error: "Failed to fetch alerts" });
+    handleRouteError(res, error, "Failed to fetch alerts");
   }
 });
 

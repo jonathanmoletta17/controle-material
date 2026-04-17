@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { authService } from "./auth.service";
 import { z } from "zod";
+import { handleRouteError } from "../../lib/errors";
 
 const router = Router();
 
@@ -13,8 +14,7 @@ router.get("/users", requireAdmin, async (req: Request, res: Response) => {
         // Since we store "LDAP_MANAGED", it's fine.
         res.json(users);
     } catch (error) {
-        console.error("Error fetching users:", error);
-        res.status(500).json({ error: "Failed to fetch users" });
+        handleRouteError(res, error, "Failed to fetch users");
     }
 });
 
@@ -47,8 +47,7 @@ router.post("/users", requireAdmin, async (req: Request, res: Response) => {
 
         res.status(201).json(user);
     } catch (error) {
-        console.error("Error creating user:", error);
-        res.status(500).json({ error: "Failed to create user" });
+        handleRouteError(res, error, "Failed to create user");
     }
 });
 
@@ -65,8 +64,7 @@ router.patch("/users/:id/role", requireAdmin, async (req: Request, res: Response
         }
         res.json(user);
     } catch (error) {
-        console.error("Error updating user role:", error);
-        res.status(500).json({ error: "Failed to update user role" });
+        handleRouteError(res, error, "Failed to update user role");
     }
 });
 
@@ -78,8 +76,7 @@ router.delete("/users/:id", requireAdmin, async (req: Request, res: Response) =>
         }
         res.status(204).send();
     } catch (error) {
-        console.error("Error deleting user:", error);
-        res.status(500).json({ error: "Failed to delete user" });
+        handleRouteError(res, error, "Failed to delete user");
     }
 });
 
